@@ -53,12 +53,12 @@ const navGroups = [
     items: [
       {
         title: "General",
-        href: "/rencana-aksi/general",
+        href: "/renaksi-rb/general",
         icon: ClipboardList,
       },
       {
         title: "Tematik",
-        href: "/rencana-aksi/tematik",
+        href: "/renaksi-rb/tematik",
         icon: ClipboardList,
       },
     ],

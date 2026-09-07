@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { RenakSiRbTable } from "./renaksi-rb-table";
 
 export const metadata = {
   title: "Rencana Aksi General",
@@ -19,15 +13,7 @@ export default function RencanaAksiGeneralPage() {
           Data rencana aksi reformasi birokrasi kategori general.
         </p>
       </div>
-      <Card className="min-h-64">
-        <CardHeader>
-          <CardTitle className="text-base">Belum ada data</CardTitle>
-          <CardDescription>
-            Halaman ini akan diisi dengan tabel rencana aksi general.
-          </CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+      <RenakSiRbTable />
     </div>
   );
 }
