@@ -37,12 +37,12 @@ const navGroups = [
     label: "Data Master",
     items: [
       {
-        title: "Nama OPD (Organisasi Perangkat Daerah)",
+        title: "Nama OPD",
         href: "/master/opd",
         icon: Building2,
       },
       {
-        title: "User OPD (Admin Organisasi Perangkat Daerah)",
+        title: "User OPD",
         href: "/master/user-opd",
         icon: UserRound,
       },

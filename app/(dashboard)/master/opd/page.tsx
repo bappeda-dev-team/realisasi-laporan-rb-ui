@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { OpdTable } from "./opd-table";
 
 export const metadata = {
   title: "Master Nama OPD",
@@ -19,15 +13,7 @@ export default function MasterOpdPage() {
           Kelola data nama Organisasi Perangkat Daerah (OPD).
         </p>
       </div>
-      <Card className="min-h-64">
-        <CardHeader>
-          <CardTitle className="text-base">Belum ada data</CardTitle>
-          <CardDescription>
-            Halaman ini akan diisi dengan tabel master nama OPD.
-          </CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+      <OpdTable />
     </div>
   );
 }
