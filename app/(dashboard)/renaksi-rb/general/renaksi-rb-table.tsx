@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useFilter } from "@/components/filter-context"
 import {
   Table,
   TableBody,
@@ -22,11 +21,13 @@ type RenakSiRb = {
   satuan: string
   capaian: string
   anggaran: string
-  capaianAnggaran: string
   faktorPenunjang: string
   faktorPenghambat: string
   opdKoordinator: string
   pelaksana: string
+  opdCrosscutting: string
+  pelaksanaCross: string
+  keterangan: string
 }
 
 const initialData: RenakSiRb[] = [
@@ -38,11 +39,13 @@ const initialData: RenakSiRb[] = [
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 50.000.000",
-    capaianAnggaran: "100%",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "Inspektorat",
+    opdCrosscutting: "Dinas Kominfo",
+    pelaksanaCross: "Bagian Organisasi",
+    keterangan: "-",
   },
   {
     id: 2,
@@ -52,11 +55,13 @@ const initialData: RenakSiRb[] = [
     satuan: "Kegiatan",
     capaian: "83%",
     anggaran: "Rp 100.000.000",
-    capaianAnggaran: "80%",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "Inspektorat",
+    pelaksanaCross: "Bagian Organisasi",
+    keterangan: "-",
   },
   {
     id: 3,
@@ -66,11 +71,13 @@ const initialData: RenakSiRb[] = [
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 75.000.000",
-    capaianAnggaran: "87%",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "BKPSDM",
+    opdCrosscutting: "BKPSDM",
+    pelaksanaCross: "Inspektorat",
+    keterangan: "-",
   },
   {
     id: 4,
@@ -80,11 +87,13 @@ const initialData: RenakSiRb[] = [
     satuan: "OPD",
     capaian: "72%",
     anggaran: "Rp 150.000.000",
-    capaianAnggaran: "60%",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
     opdKoordinator: "Dinas Kominfo",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "Bagian Organisasi",
+    pelaksanaCross: "Dinas Kominfo",
+    keterangan: "-",
   },
   {
     id: 5,
@@ -94,17 +103,18 @@ const initialData: RenakSiRb[] = [
     satuan: "Persen",
     capaian: "77%",
     anggaran: "Rp 120.000.000",
-    capaianAnggaran: "83%",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
     opdKoordinator: "Inspektorat",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "-",
+    pelaksanaCross: "-",
+    keterangan: "Perlu evaluasi berkala",
   },
 ]
 
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
-  const { tahun } = useFilter()
 
   const filteredData = initialData.filter(
     (d) =>
@@ -133,30 +143,33 @@ export function RenakSiRbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Rencana Aksi</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={5}>
-                Tahun Anggaran {tahun}
+              <TableHead>
+                Periode Pelaksanaan
               </TableHead>
-              <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
-              <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
+              <TableHead rowSpan={2}>Satuan Output</TableHead>
+              <TableHead rowSpan={2}>Capaian</TableHead>
+              <TableHead>Biaya</TableHead>
               <TableHead rowSpan={2}>OPD Koordinator</TableHead>
               <TableHead rowSpan={2}>Pelaksana</TableHead>
+              <TableHead rowSpan={2}>OPD Crosscutting</TableHead>
+              <TableHead rowSpan={2}>Pelaksana Cross</TableHead>
+              <TableHead rowSpan={2}>Keterangan</TableHead>
+              <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
+              <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
               <TableHead rowSpan={2} className="w-28">
                 Aksi
               </TableHead>
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
-              <TableHead>Satuan</TableHead>
-              <TableHead>Capaian</TableHead>
               <TableHead>Anggaran</TableHead>
-              <TableHead>Capaian</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={13}
+                  colSpan={15}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -176,18 +189,26 @@ export function RenakSiRbTable() {
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
                   <TableCell>{item.anggaran}</TableCell>
-                  <TableCell>{item.capaianAnggaran}</TableCell>
-                  <TableCell className="text-left">
-                    {item.faktorPenunjang}
-                  </TableCell>
-                  <TableCell className="text-left">
-                    {item.faktorPenghambat}
-                  </TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
                   </TableCell>
                   <TableCell className="text-left">
                     {item.pelaksana}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.opdCrosscutting}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.pelaksanaCross}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.keterangan}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.faktorPenunjang}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.faktorPenghambat}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">

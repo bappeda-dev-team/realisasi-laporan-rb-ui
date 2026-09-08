@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { useFilter } from "@/components/filter-context"
 import {
   Table,
   TableBody,
@@ -27,16 +26,16 @@ type RenakSiRb = {
   kegiatanUtama: string
   indikator: string
   target: string
-  realisasi: string
   satuan: string
   capaian: string
   anggaran: string
-  realisasiAnggaran: string
-  capaianAnggaran: string
   faktorPenunjang: string
   faktorPenghambat: string
   opdKoordinator: string
   pelaksana: string
+  opdCrosscutting: string
+  pelaksanaCross: string
+  keterangan: string
 }
 
 const initialData: RenakSiRb[] = [
@@ -45,87 +44,86 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
     indikator: "Terbitnya dokumen RB tingkat kabupaten",
     target: "1",
-    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 50.000.000",
-    realisasiAnggaran: "Rp 50.000.000",
-    capaianAnggaran: "100%",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "Inspektorat",
+    opdCrosscutting: "Dinas Kominfo",
+    pelaksanaCross: "Bagian Organisasi",
+    keterangan: "-",
   },
   {
     id: 2,
     kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
     indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
     target: "12",
-    realisasi: "10",
     satuan: "Kegiatan",
     capaian: "83%",
     anggaran: "Rp 100.000.000",
-    realisasiAnggaran: "Rp 80.000.000",
-    capaianAnggaran: "80%",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "Inspektorat",
+    pelaksanaCross: "Bagian Organisasi",
+    keterangan: "-",
   },
   {
     id: 3,
     kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
     indikator: "Terbitnya SK Tim Reformasi Birokrasi",
     target: "1",
-    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 75.000.000",
-    realisasiAnggaran: "Rp 65.000.000",
-    capaianAnggaran: "87%",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
     opdKoordinator: "Bagian Organisasi",
     pelaksana: "BKPSDM",
+    opdCrosscutting: "BKPSDM",
+    pelaksanaCross: "Inspektorat",
+    keterangan: "-",
   },
   {
     id: 4,
     kegiatanUtama: "Pengembangan Sistem Kerja Digital",
     indikator: "OPD yang menerapkan e-Office",
     target: "25",
-    realisasi: "18",
     satuan: "OPD",
     capaian: "72%",
     anggaran: "Rp 150.000.000",
-    realisasiAnggaran: "Rp 90.000.000",
-    capaianAnggaran: "60%",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
     opdKoordinator: "Dinas Kominfo",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "Bagian Organisasi",
+    pelaksanaCross: "Dinas Kominfo",
+    keterangan: "-",
   },
   {
     id: 5,
     kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
     indikator: "Tercapainya nilai SAKIP",
     target: "80",
-    realisasi: "62",
     satuan: "Persen",
     capaian: "77%",
     anggaran: "Rp 120.000.000",
-    realisasiAnggaran: "Rp 100.000.000",
-    capaianAnggaran: "83%",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
     opdKoordinator: "Inspektorat",
     pelaksana: "Seluruh OPD",
+    opdCrosscutting: "-",
+    pelaksanaCross: "-",
+    keterangan: "Perlu evaluasi berkala",
   },
 ]
 
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
-  const { tahun } = useFilter()
 
   const filteredData = initialData.filter(
     (d) =>
@@ -166,25 +164,26 @@ export function RenakSiRbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Rencana Aksi</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={7}>
-                Tahun Anggaran {tahun}
+              <TableHead>
+                Periode Pelaksanaan
               </TableHead>
-              <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
-              <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
+              <TableHead rowSpan={2}>Satuan Output</TableHead>
+              <TableHead rowSpan={2}>Capaian</TableHead>
+              <TableHead>Biaya</TableHead>
               <TableHead rowSpan={2}>OPD Koordinator</TableHead>
               <TableHead rowSpan={2}>Pelaksana</TableHead>
+              <TableHead rowSpan={2}>OPD Crosscutting</TableHead>
+              <TableHead rowSpan={2}>Pelaksana Cross</TableHead>
+              <TableHead rowSpan={2}>Keterangan</TableHead>
+              <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
+              <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
               <TableHead rowSpan={2} className="w-28">
                 Aksi
               </TableHead>
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
-              <TableHead>Realisasi</TableHead>
-              <TableHead>Satuan</TableHead>
-              <TableHead>Capaian</TableHead>
               <TableHead>Anggaran</TableHead>
-              <TableHead>Realisasi</TableHead>
-              <TableHead>Capaian</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -208,23 +207,29 @@ export function RenakSiRbTable() {
                     {item.indikator}
                   </TableCell>
                   <TableCell>{item.target}</TableCell>
-                  <TableCell>{item.realisasi}</TableCell>
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
                   <TableCell>{item.anggaran}</TableCell>
-                  <TableCell>{item.realisasiAnggaran}</TableCell>
-                  <TableCell>{item.capaianAnggaran}</TableCell>
-                  <TableCell className="text-left">
-                    {item.faktorPenunjang}
-                  </TableCell>
-                  <TableCell className="text-left">
-                    {item.faktorPenghambat}
-                  </TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
                   </TableCell>
                   <TableCell className="text-left">
                     {item.pelaksana}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.opdCrosscutting}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.pelaksanaCross}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.keterangan}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.faktorPenunjang}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    {item.faktorPenghambat}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">
