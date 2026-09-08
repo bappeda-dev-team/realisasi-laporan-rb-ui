@@ -128,3 +128,37 @@
     @apply font-sans;
   }
 }
+
+@theme {
+  --animate-success-pop: success-pop 0.3s ease-out both;
+  --animate-draw-circle: draw-circle 0.5s ease-out 0.1s both;
+  --animate-draw-check: draw-check 0.4s ease-out 0.5s both;
+}
+
+@keyframes success-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes draw-circle {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes draw-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

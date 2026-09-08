@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Collapsible as CollapsiblePrimitive } from "radix-ui";
+import { useFilter } from "@/components/filter-context";
 import {
   Building2,
   ChevronDown,
@@ -75,12 +76,12 @@ const navGroups = [
       {
         title: "General",
         href: "/realisasi-rb/general",
-        icon: CircleDollarSign,
+        icon: ClipboardList,
       },
       {
         title: "Tematik",
         href: "/realisasi-rb/tematik",
-        icon: CircleDollarSign,
+        icon: ClipboardList,
       },
     ],
   },
@@ -88,13 +89,13 @@ const navGroups = [
     label: "Lainnya",
     items: [
       { title: "Laporan", href: "/laporan", icon: FileText },
-      { title: "Pengaturan", href: "/pengaturan", icon: Settings },
     ],
   },
 ] as const;
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { opd } = useFilter();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -112,7 +113,7 @@ export function AppSidebar() {
                 <div className="flex flex-col leading-tight">
                   <span className="truncate font-semibold">Realisasi RB</span>
                   <span className="truncate text-xs text-sidebar-foreground/70">
-                    Bappeda
+                    {opd}
                   </span>
                 </div>
               </Link>

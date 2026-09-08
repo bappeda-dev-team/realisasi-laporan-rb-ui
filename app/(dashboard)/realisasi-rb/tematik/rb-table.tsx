@@ -22,110 +22,123 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type RenakSiRb = {
+type RealisasiRb = {
   id: number
   kegiatanUtama: string
   indikator: string
-  target: string
-  realisasi: string
-  satuan: string
-  capaian: string
-  anggaran: string
-  realisasiAnggaran: string
-  capaianAnggaran: string
+  baseline: {
+    target: string
+    realisasi: string
+    satuan: string
+    capaian: string
+  }
+  berjalan: {
+    target: string
+    satuan: string
+  }
+  keterangan: string
   faktorPenunjang: string
   faktorPenghambat: string
-  opdKoordinator: string
-  pelaksana: string
 }
 
-const initialData: RenakSiRb[] = [
+const initialData: RealisasiRb[] = [
   {
     id: 1,
     kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
     indikator: "Terbitnya dokumen RB tingkat kabupaten",
-    target: "1",
-    realisasi: "1",
-    satuan: "Dokumen",
-    capaian: "100%",
-    anggaran: "Rp 50.000.000",
-    realisasiAnggaran: "Rp 50.000.000",
-    capaianAnggaran: "100%",
+    baseline: {
+      target: "1",
+      realisasi: "1",
+      satuan: "Dokumen",
+      capaian: "100%",
+    },
+    berjalan: {
+      target: "1",
+      satuan: "Dokumen",
+    },
+    keterangan: "Dokumen RB tingkat kabupaten",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "Inspektorat",
   },
   {
     id: 2,
     kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
     indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
-    target: "12",
-    realisasi: "10",
-    satuan: "Kegiatan",
-    capaian: "83%",
-    anggaran: "Rp 100.000.000",
-    realisasiAnggaran: "Rp 80.000.000",
-    capaianAnggaran: "80%",
+    baseline: {
+      target: "12",
+      realisasi: "10",
+      satuan: "Kegiatan",
+      capaian: "83%",
+    },
+    berjalan: {
+      target: "12",
+      satuan: "Kegiatan",
+    },
+    keterangan: "Sosialisasi kepada seluruh OPD",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "Seluruh OPD",
   },
   {
     id: 3,
     kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
     indikator: "Terbitnya SK Tim Reformasi Birokrasi",
-    target: "1",
-    realisasi: "1",
-    satuan: "Dokumen",
-    capaian: "100%",
-    anggaran: "Rp 75.000.000",
-    realisasiAnggaran: "Rp 65.000.000",
-    capaianAnggaran: "87%",
+    baseline: {
+      target: "1",
+      realisasi: "1",
+      satuan: "Dokumen",
+      capaian: "100%",
+    },
+    berjalan: {
+      target: "1",
+      satuan: "Dokumen",
+    },
+    keterangan: "Penataan organisasi dan tata laksana",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "BKPSDM",
   },
   {
     id: 4,
     kegiatanUtama: "Pengembangan Sistem Kerja Digital",
     indikator: "OPD yang menerapkan e-Office",
-    target: "25",
-    realisasi: "18",
-    satuan: "OPD",
-    capaian: "72%",
-    anggaran: "Rp 150.000.000",
-    realisasiAnggaran: "Rp 90.000.000",
-    capaianAnggaran: "60%",
+    baseline: {
+      target: "25",
+      realisasi: "18",
+      satuan: "OPD",
+      capaian: "72%",
+    },
+    berjalan: {
+      target: "30",
+      satuan: "OPD",
+    },
+    keterangan: "Penerapan e-Office di seluruh OPD",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
-    opdKoordinator: "Dinas Kominfo",
-    pelaksana: "Seluruh OPD",
   },
   {
     id: 5,
     kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
     indikator: "Tercapainya nilai SAKIP",
-    target: "80",
-    realisasi: "62",
-    satuan: "Persen",
-    capaian: "77%",
-    anggaran: "Rp 120.000.000",
-    realisasiAnggaran: "Rp 100.000.000",
-    capaianAnggaran: "83%",
+    baseline: {
+      target: "80",
+      realisasi: "62",
+      satuan: "Persen",
+      capaian: "77%",
+    },
+    berjalan: {
+      target: "85",
+      satuan: "Persen",
+    },
+    keterangan: "Peningkatan nilai SAKIP kabupaten",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
-    opdKoordinator: "Inspektorat",
-    pelaksana: "Seluruh OPD",
   },
 ]
 
-export function RenakSiRbTable() {
+export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
   const { tahun } = useFilter()
+  const baselineTahun = Number(tahun) - 1
 
   const filteredData = initialData.filter(
     (d) =>
@@ -164,15 +177,13 @@ export function RenakSiRbTable() {
               <TableHead rowSpan={2} className="w-12">
                 No
               </TableHead>
-              <TableHead rowSpan={2}>Rencana Aksi</TableHead>
+              <TableHead rowSpan={2}>Kegiatan Utama</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={7}>
-                Tahun Anggaran {tahun}
-              </TableHead>
+              <TableHead colSpan={4}>BaseLine {baselineTahun}</TableHead>
+              <TableHead colSpan={2}>{tahun}</TableHead>
+              <TableHead rowSpan={2}>Keterangan</TableHead>
               <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
               <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
-              <TableHead rowSpan={2}>OPD Koordinator</TableHead>
-              <TableHead rowSpan={2}>Pelaksana</TableHead>
               <TableHead rowSpan={2} className="w-28">
                 Aksi
               </TableHead>
@@ -182,16 +193,15 @@ export function RenakSiRbTable() {
               <TableHead>Realisasi</TableHead>
               <TableHead>Satuan</TableHead>
               <TableHead>Capaian</TableHead>
-              <TableHead>Anggaran</TableHead>
-              <TableHead>Realisasi</TableHead>
-              <TableHead>Capaian</TableHead>
+              <TableHead>Target</TableHead>
+              <TableHead>Satuan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={15}
+                  colSpan={14}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -204,27 +214,19 @@ export function RenakSiRbTable() {
                   <TableCell className="text-left">
                     {item.kegiatanUtama}
                   </TableCell>
-                  <TableCell className="text-left">
-                    {item.indikator}
-                  </TableCell>
-                  <TableCell>{item.target}</TableCell>
-                  <TableCell>{item.realisasi}</TableCell>
-                  <TableCell>{item.satuan}</TableCell>
-                  <TableCell>{item.capaian}</TableCell>
-                  <TableCell>{item.anggaran}</TableCell>
-                  <TableCell>{item.realisasiAnggaran}</TableCell>
-                  <TableCell>{item.capaianAnggaran}</TableCell>
+                  <TableCell className="text-left">{item.indikator}</TableCell>
+                  <TableCell>{item.baseline.target}</TableCell>
+                  <TableCell>{item.baseline.realisasi}</TableCell>
+                  <TableCell>{item.baseline.satuan}</TableCell>
+                  <TableCell>{item.baseline.capaian}</TableCell>
+                  <TableCell>{item.berjalan.target}</TableCell>
+                  <TableCell>{item.berjalan.satuan}</TableCell>
+                  <TableCell className="text-left">{item.keterangan}</TableCell>
                   <TableCell className="text-left">
                     {item.faktorPenunjang}
                   </TableCell>
                   <TableCell className="text-left">
                     {item.faktorPenghambat}
-                  </TableCell>
-                  <TableCell className="text-left">
-                    {item.opdKoordinator}
-                  </TableCell>
-                  <TableCell className="text-left">
-                    {item.pelaksana}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">

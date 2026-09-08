@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -11,6 +11,12 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useFilter } from "@/components/filter-context"
 
 const daftarOpd = [
@@ -52,6 +58,13 @@ export function FilterNavbar() {
   const [draftPeriode, setDraftPeriode] = useState(periode)
   const [draftTahun, setDraftTahun] = useState(tahun)
   const [draftBulan, setDraftBulan] = useState(bulan)
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (!dialogOpen) return
+    const timer = setTimeout(() => setDialogOpen(false), 2000)
+    return () => clearTimeout(timer)
+  }, [dialogOpen])
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2">
@@ -133,11 +146,53 @@ export function FilterNavbar() {
             setPeriode(draftPeriode)
             setTahun(draftTahun)
             setBulan(draftBulan)
+            setDialogOpen(true)
           }}
         >
           Aktifkan
         </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="grid place-items-center gap-4 py-10 text-center"
+        >
+          <DialogTitle className="sr-only">Anda Berhasil Diaktifkan</DialogTitle>
+          <svg
+            viewBox="0 0 52 52"
+            className="size-24 animate-success-pop"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              cx="26"
+              cy="26"
+              r="23"
+              fill="none"
+              stroke="oklch(0.62 0.168 168.4)"
+              strokeWidth="3"
+              className="animate-draw-circle origin-center"
+            />
+            <path
+              fill="none"
+              stroke="oklch(0.62 0.168 168.4)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="48"
+              strokeDashoffset="48"
+              d="M14 27 l8 8 l16 -17"
+              className="animate-draw-check"
+            />
+          </svg>
+          <DialogTitle className="text-lg font-semibold">
+            Anda Berhasil Diaktifkan
+          </DialogTitle>
+          <DialogDescription>
+            Filter telah berhasil diterapkan pada tampilan data.
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

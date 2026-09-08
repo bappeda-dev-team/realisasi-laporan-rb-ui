@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { RbTable } from "./rb-table";
 
 export const metadata = {
   title: "Realisasi RB General",
@@ -19,15 +13,7 @@ export default function RealisasiRbGeneralPage() {
           Data realisasi reformasi birokrasi kategori general.
         </p>
       </div>
-      <Card className="min-h-64">
-        <CardHeader>
-          <CardTitle className="text-base">Belum ada data</CardTitle>
-          <CardDescription>
-            Halaman ini akan diisi dengan tabel realisasi RB general.
-          </CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+      <RbTable />
     </div>
   );
 }

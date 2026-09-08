@@ -13,13 +13,13 @@ export default function DashboardLayout({
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <FilterProvider>
+        <FilterProvider>
+          <AppSidebar />
+          <SidebarInset>
             <FilterNavbar />
             <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
-          </FilterProvider>
-        </SidebarInset>
+          </SidebarInset>
+        </FilterProvider>
         <Toaster position="top-right" />
       </SidebarProvider>
     </TooltipProvider>

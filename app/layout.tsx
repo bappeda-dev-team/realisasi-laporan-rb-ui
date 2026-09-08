@@ -17,8 +17,6 @@ export const metadata: Metadata = {
     default: "Realisasi RB",
     template: "%s | Realisasi RB",
   },
-  description:
-    "Aplikasi monitoring realisasi rencana belanja (RB) Bappeda.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
