@@ -11,6 +11,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
+import { useFilter } from "@/components/filter-context"
 
 const daftarOpd = [
   "Semua OPD",
@@ -45,10 +46,12 @@ const daftarBulan = [
 ]
 
 export function FilterNavbar() {
-  const [opd, setOpd] = useState("Semua OPD")
-  const [periode, setPeriode] = useState("Tahun Penuh")
-  const [tahun, setTahun] = useState("2026")
-  const [bulan, setBulan] = useState("Januari")
+  const { opd, setOpd, periode, setPeriode, tahun, setTahun, bulan, setBulan } =
+    useFilter()
+  const [draftOpd, setDraftOpd] = useState(opd)
+  const [draftPeriode, setDraftPeriode] = useState(periode)
+  const [draftTahun, setDraftTahun] = useState(tahun)
+  const [draftBulan, setDraftBulan] = useState(bulan)
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2">
@@ -60,7 +63,7 @@ export function FilterNavbar() {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">OPD</span>
-          <Select value={opd} onValueChange={setOpd}>
+          <Select value={draftOpd} onValueChange={setDraftOpd}>
             <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
@@ -76,7 +79,7 @@ export function FilterNavbar() {
 
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">Periode</span>
-          <Select value={periode} onValueChange={setPeriode}>
+          <Select value={draftPeriode} onValueChange={setDraftPeriode}>
             <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
@@ -92,7 +95,7 @@ export function FilterNavbar() {
 
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">Tahun</span>
-          <Select value={tahun} onValueChange={setTahun}>
+          <Select value={draftTahun} onValueChange={setDraftTahun}>
             <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
@@ -108,7 +111,7 @@ export function FilterNavbar() {
 
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">Bulan</span>
-          <Select value={bulan} onValueChange={setBulan}>
+          <Select value={draftBulan} onValueChange={setDraftBulan}>
             <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
@@ -122,7 +125,18 @@ export function FilterNavbar() {
           </Select>
         </div>
 
-        <Button size="sm">Aktifkan</Button>
+        <Button
+          size="sm"
+          type="button"
+          onClick={() => {
+            setOpd(draftOpd)
+            setPeriode(draftPeriode)
+            setTahun(draftTahun)
+            setBulan(draftBulan)
+          }}
+        >
+          Aktifkan
+        </Button>
       </div>
     </div>
   )

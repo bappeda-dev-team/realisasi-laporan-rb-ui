@@ -11,6 +11,7 @@ import {
   FileText,
   Landmark,
   LayoutDashboard,
+  Scale,
   Settings,
   UserRound,
 } from "lucide-react";
@@ -45,6 +46,11 @@ const navGroups = [
         title: "User OPD",
         href: "/master/user-opd",
         icon: UserRound,
+      },
+      {
+        title: "Reformasi Birokrasi",
+        href: "/master/reformasi-birokrasi",
+        icon: Scale,
       },
     ],
   },
