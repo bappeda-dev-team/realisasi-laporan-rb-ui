@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Lock, RefreshCw, Search, Upload } from "lucide-react"
+import { Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { ModalRenaksiRb } from "./modal-renaksi-rb"
 import {
   Table,
   TableBody,
@@ -136,8 +137,14 @@ const initialData: RenakSiRb[] = [
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingField, setEditingField] = useState<"realisasi" | "realisasiAnggaran" | null>(null)
+  const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
+  const [indikatorValue, setIndikatorValue] = useState("")
+  const [realisasiValue, setRealisasiValue] = useState("")
+  const [data, setData] = useState(initialData)
 
-  const filteredData = initialData.filter(
+  const filteredData = data.filter(
     (d) =>
       d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
@@ -221,11 +228,37 @@ export function RenakSiRbTable() {
                     {item.indikator}
                   </TableCell>
                   <TableCell>{item.target}</TableCell>
-                  <TableCell>{item.realisasi}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-center gap-1">
+                      {item.realisasi}
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingId(item.id); setEditingField("realisasi"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasi); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setEditingField("realisasi"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasi); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
                   <TableCell>{item.anggaran}</TableCell>
-                  <TableCell>{item.realisasiAnggaran}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-center gap-1">
+                      {item.realisasiAnggaran}
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingId(item.id); setEditingField("realisasiAnggaran"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasiAnggaran); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setEditingField("realisasiAnggaran"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasiAnggaran); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
                   </TableCell>
@@ -284,6 +317,27 @@ export function RenakSiRbTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ModalRenaksiRb
+        open={editingId !== null}
+        onOpenChange={(open) => !open && setEditingId(null)}
+        kegiatanUtama={kegiatanUtamaValue}
+        indikator={indikatorValue}
+        realisasiValue={realisasiValue}
+        onRealisasiChange={setRealisasiValue}
+        onSave={() => {
+          if (editingId !== null && editingField !== null) {
+            setData((prev) =>
+              prev.map((item) => {
+                if (item.id !== editingId) return item
+                if (editingField === "realisasi") return { ...item, realisasi: realisasiValue }
+                return { ...item, realisasiAnggaran: realisasiValue }
+              })
+            )
+            setEditingId(null)
+          }
+        }}
+      />
     </div>
   )
 }

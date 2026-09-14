@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Lock, RefreshCw, Search, Upload } from "lucide-react"
+import { Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { useFilter } from "@/components/filter-context"
+import { ModalRb } from "./modal-rb"
 import {
   Table,
   TableBody,
@@ -137,10 +138,15 @@ const initialData: RealisasiRb[] = [
 export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
+  const [indikatorValue, setIndikatorValue] = useState("")
+  const [realisasiValue, setRealisasiValue] = useState("")
+  const [data, setData] = useState(initialData)
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
 
-  const filteredData = initialData.filter(
+  const filteredData = data.filter(
     (d) =>
       d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
@@ -216,7 +222,20 @@ export function RbTable() {
                   </TableCell>
                   <TableCell className="text-left">{item.indikator}</TableCell>
                   <TableCell>{item.baseline.target}</TableCell>
-                  <TableCell>{item.baseline.realisasi}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-center gap-1">
+                      {item.baseline.realisasi}
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell>{item.baseline.satuan}</TableCell>
                   <TableCell>{item.baseline.capaian}</TableCell>
                   <TableCell>{item.berjalan.target}</TableCell>
@@ -265,6 +284,27 @@ export function RbTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ModalRb
+        open={editingId !== null}
+        onOpenChange={(open) => !open && setEditingId(null)}
+        kegiatanUtama={kegiatanUtamaValue}
+        indikator={indikatorValue}
+        realisasiValue={realisasiValue}
+        onRealisasiChange={setRealisasiValue}
+        onSave={() => {
+          if (editingId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingId
+                  ? { ...item, baseline: { ...item.baseline, realisasi: realisasiValue } }
+                  : item
+              )
+            )
+            setEditingId(null)
+          }
+        }}
+      />
     </div>
   )
 }
