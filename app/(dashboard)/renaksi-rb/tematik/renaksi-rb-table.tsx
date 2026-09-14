@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
+import { Pencil, Lock, RefreshCw, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +12,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { ModalRenaksiRb } from "./modal-renaksi-rb"
+import { ModalFaktorPenunjang } from "./modal-faktor-penunjang"
+import { ModalFaktorPenghambat } from "./modal-faktor-penghambat"
 import {
   Table,
   TableBody,
@@ -27,11 +28,9 @@ type RenakSiRb = {
   kegiatanUtama: string
   indikator: string
   target: string
-  realisasi: string
   satuan: string
   capaian: string
   anggaran: string
-  realisasiAnggaran: string
   faktorPenunjang: string
   faktorPenghambat: string
   opdKoordinator: string
@@ -47,11 +46,9 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
     indikator: "Terbitnya dokumen RB tingkat kabupaten",
     target: "1",
-    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 50.000.000",
-    realisasiAnggaran: "Rp 50.000.000",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
     opdKoordinator: "Bagian Organisasi",
@@ -65,11 +62,9 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
     indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
     target: "12",
-    realisasi: "10",
     satuan: "Kegiatan",
     capaian: "83%",
     anggaran: "Rp 100.000.000",
-    realisasiAnggaran: "Rp 83.000.000",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
     opdKoordinator: "Bagian Organisasi",
@@ -83,11 +78,9 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
     indikator: "Terbitnya SK Tim Reformasi Birokrasi",
     target: "1",
-    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 75.000.000",
-    realisasiAnggaran: "Rp 75.000.000",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
     opdKoordinator: "Bagian Organisasi",
@@ -101,11 +94,9 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Pengembangan Sistem Kerja Digital",
     indikator: "OPD yang menerapkan e-Office",
     target: "25",
-    realisasi: "18",
     satuan: "OPD",
     capaian: "72%",
     anggaran: "Rp 150.000.000",
-    realisasiAnggaran: "Rp 108.000.000",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
     opdKoordinator: "Dinas Kominfo",
@@ -119,11 +110,9 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
     indikator: "Tercapainya nilai SAKIP",
     target: "80",
-    realisasi: "62",
     satuan: "Persen",
     capaian: "77%",
     anggaran: "Rp 120.000.000",
-    realisasiAnggaran: "Rp 92.400.000",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
     opdKoordinator: "Inspektorat",
@@ -137,12 +126,11 @@ const initialData: RenakSiRb[] = [
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editingField, setEditingField] = useState<"realisasi" | "realisasiAnggaran" | null>(null)
-  const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
-  const [indikatorValue, setIndikatorValue] = useState("")
-  const [realisasiValue, setRealisasiValue] = useState("")
   const [data, setData] = useState(initialData)
+  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+  const [faktorValue, setFaktorValue] = useState("")
+  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+  const [penghambatValue, setPenghambatValue] = useState("")
 
   const filteredData = data.filter(
     (d) =>
@@ -183,12 +171,10 @@ export function RenakSiRbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Rencana Aksi</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={2}>
-                Periode Pelaksanaan
-              </TableHead>
+              <TableHead>Periode Pelaksanaan</TableHead>
               <TableHead rowSpan={2}>Satuan Output</TableHead>
               <TableHead rowSpan={2}>Capaian</TableHead>
-              <TableHead colSpan={2}>Biaya</TableHead>
+              <TableHead>Biaya</TableHead>
               <TableHead rowSpan={2}>OPD Koordinator</TableHead>
               <TableHead rowSpan={2}>Pelaksana</TableHead>
               <TableHead rowSpan={2}>OPD Crosscutting</TableHead>
@@ -202,16 +188,14 @@ export function RenakSiRbTable() {
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
-              <TableHead>Realisasi</TableHead>
               <TableHead>Anggaran</TableHead>
-              <TableHead>Realisasi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={17}
+                  colSpan={15}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -228,37 +212,9 @@ export function RenakSiRbTable() {
                     {item.indikator}
                   </TableCell>
                   <TableCell>{item.target}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col items-center gap-1">
-                      {item.realisasi}
-                      <span
-                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingId(item.id); setEditingField("realisasi"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasi); }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setEditingField("realisasi"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasi); } }}
-                      >
-                        <Pencil className="size-3 text-muted-foreground" />
-                      </span>
-                    </div>
-                  </TableCell>
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
                   <TableCell>{item.anggaran}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col items-center gap-1">
-                      {item.realisasiAnggaran}
-                      <span
-                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingId(item.id); setEditingField("realisasiAnggaran"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasiAnggaran); }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setEditingField("realisasiAnggaran"); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.realisasiAnggaran); } }}
-                      >
-                        <Pencil className="size-3 text-muted-foreground" />
-                      </span>
-                    </div>
-                  </TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
                   </TableCell>
@@ -275,10 +231,32 @@ export function RenakSiRbTable() {
                     {item.keterangan}
                   </TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenunjang}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenunjang}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenghambat}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenghambat}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">
@@ -318,23 +296,45 @@ export function RenakSiRbTable() {
         </DialogContent>
       </Dialog>
 
-      <ModalRenaksiRb
-        open={editingId !== null}
-        onOpenChange={(open) => !open && setEditingId(null)}
-        kegiatanUtama={kegiatanUtamaValue}
-        indikator={indikatorValue}
-        realisasiValue={realisasiValue}
-        onRealisasiChange={setRealisasiValue}
+      <ModalFaktorPenunjang
+        open={editingFaktorId !== null}
+        onOpenChange={(open) => { if (!open) setEditingFaktorId(null); }}
+        title="Faktor Penunjang"
+        kegiatanUtama={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.indikator ?? "" : ""}
+        fieldValue={faktorValue}
+        onFieldChange={setFaktorValue}
         onSave={() => {
-          if (editingId !== null && editingField !== null) {
+          if (editingFaktorId !== null) {
             setData((prev) =>
-              prev.map((item) => {
-                if (item.id !== editingId) return item
-                if (editingField === "realisasi") return { ...item, realisasi: realisasiValue }
-                return { ...item, realisasiAnggaran: realisasiValue }
-              })
+              prev.map((item) =>
+                item.id === editingFaktorId
+                  ? { ...item, faktorPenunjang: faktorValue }
+                  : item
+              )
             )
-            setEditingId(null)
+            setEditingFaktorId(null)
+          }
+        }}
+      />
+
+      <ModalFaktorPenghambat
+        open={editingPenghambatId !== null}
+        onOpenChange={(open) => { if (!open) setEditingPenghambatId(null); }}
+        kegiatanUtama={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? "" : ""}
+        fieldValue={penghambatValue}
+        onFieldChange={setPenghambatValue}
+        onSave={() => {
+          if (editingPenghambatId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingPenghambatId
+                  ? { ...item, faktorPenghambat: penghambatValue }
+                  : item
+              )
+            )
+            setEditingPenghambatId(null)
           }
         }}
       />

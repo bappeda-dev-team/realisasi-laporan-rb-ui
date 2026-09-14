@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Upload } from "lucide-react"
+import { Pencil, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ModalFaktorPenunjang } from "./modal-faktor-penunjang"
+import { ModalFaktorPenghambat } from "./modal-faktor-penghambat"
 import {
   Table,
   TableBody,
@@ -115,8 +117,13 @@ const initialData: RenakSiRb[] = [
 
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [data, setData] = useState(initialData)
+  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+  const [faktorValue, setFaktorValue] = useState("")
+  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+  const [penghambatValue, setPenghambatValue] = useState("")
 
-  const filteredData = initialData.filter(
+  const filteredData = data.filter(
     (d) =>
       d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
@@ -205,10 +212,32 @@ export function RenakSiRbTable() {
                     {item.keterangan}
                   </TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenunjang}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenunjang}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenghambat}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenghambat}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">
@@ -224,6 +253,49 @@ export function RenakSiRbTable() {
           </TableBody>
         </Table>
       </div>
+
+      <ModalFaktorPenunjang
+        open={editingFaktorId !== null}
+        onOpenChange={(open) => { if (!open) setEditingFaktorId(null); }}
+        title="Faktor Penunjang"
+        kegiatanUtama={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.indikator ?? "" : ""}
+        fieldValue={faktorValue}
+        onFieldChange={setFaktorValue}
+        onSave={() => {
+          if (editingFaktorId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingFaktorId
+                  ? { ...item, faktorPenunjang: faktorValue }
+                  : item
+              )
+            )
+            setEditingFaktorId(null)
+          }
+        }}
+      />
+
+      <ModalFaktorPenghambat
+        open={editingPenghambatId !== null}
+        onOpenChange={(open) => { if (!open) setEditingPenghambatId(null); }}
+        kegiatanUtama={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? "" : ""}
+        fieldValue={penghambatValue}
+        onFieldChange={setPenghambatValue}
+        onSave={() => {
+          if (editingPenghambatId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingPenghambatId
+                  ? { ...item, faktorPenghambat: penghambatValue }
+                  : item
+              )
+            )
+            setEditingPenghambatId(null)
+          }
+        }}
+      />
     </div>
   )
 }

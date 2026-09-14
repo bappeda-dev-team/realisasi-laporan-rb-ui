@@ -1,10 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Upload } from "lucide-react"
+import { Pencil, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useFilter } from "@/components/filter-context"
+import { ModalRbGeneral } from "./modal-rb-general"
+import { ModalFaktorPenunjang } from "./modal-faktor-penunjang"
+import { ModalFaktorPenghambat } from "./modal-faktor-penghambat"
 import {
   Table,
   TableBody,
@@ -128,10 +131,19 @@ const initialData: RealisasiRb[] = [
 
 export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
+  const [indikatorValue, setIndikatorValue] = useState("")
+  const [realisasiValue, setRealisasiValue] = useState("")
+  const [data, setData] = useState(initialData)
+  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+  const [faktorValue, setFaktorValue] = useState("")
+  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+  const [penghambatValue, setPenghambatValue] = useState("")
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
 
-  const filteredData = initialData.filter(
+  const filteredData = data.filter(
     (d) =>
       d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
@@ -158,7 +170,7 @@ export function RbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Kegiatan Utama</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={3}>BaseLine {baselineTahun}</TableHead>
+              <TableHead colSpan={4}>BaseLine {baselineTahun}</TableHead>
               <TableHead colSpan={2}>{tahun}</TableHead>
               <TableHead rowSpan={2}>Keterangan</TableHead>
               <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
@@ -169,6 +181,7 @@ export function RbTable() {
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
+              <TableHead>Realisasi</TableHead>
               <TableHead>Satuan</TableHead>
               <TableHead>Capaian</TableHead>
               <TableHead>Target</TableHead>
@@ -194,16 +207,52 @@ export function RbTable() {
                   </TableCell>
                   <TableCell className="text-left">{item.indikator}</TableCell>
                   <TableCell>{item.baseline.target}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-center gap-1">
+                      {item.baseline.realisasi}
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell>{item.baseline.satuan}</TableCell>
                   <TableCell>{item.baseline.capaian}</TableCell>
                   <TableCell>{item.berjalan.target}</TableCell>
                   <TableCell>{item.berjalan.satuan}</TableCell>
                   <TableCell className="text-left">{item.keterangan}</TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenunjang}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenunjang}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-left">
-                    {item.faktorPenghambat}
+                    <div className="flex flex-col items-center gap-1">
+                      <span>{item.faktorPenghambat}</span>
+                      <span
+                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
+                        onClick={() => { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); } }}
+                      >
+                        <Pencil className="size-3 text-muted-foreground" />
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center">
@@ -219,6 +268,70 @@ export function RbTable() {
           </TableBody>
         </Table>
       </div>
+
+      <ModalRbGeneral
+        open={editingId !== null}
+        onOpenChange={(open) => !open && setEditingId(null)}
+        kegiatanUtama={kegiatanUtamaValue}
+        indikator={indikatorValue}
+        realisasiValue={realisasiValue}
+        onRealisasiChange={setRealisasiValue}
+        onSave={() => {
+          if (editingId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingId
+                  ? { ...item, baseline: { ...item.baseline, realisasi: realisasiValue } }
+                  : item
+              )
+            )
+            setEditingId(null)
+          }
+        }}
+      />
+
+      <ModalFaktorPenunjang
+        open={editingFaktorId !== null}
+        onOpenChange={(open) => { if (!open) setEditingFaktorId(null); }}
+        title="Faktor Penunjang"
+        kegiatanUtama={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.indikator ?? "" : ""}
+        fieldValue={faktorValue}
+        onFieldChange={setFaktorValue}
+        onSave={() => {
+          if (editingFaktorId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingFaktorId
+                  ? { ...item, faktorPenunjang: faktorValue }
+                  : item
+              )
+            )
+            setEditingFaktorId(null)
+          }
+        }}
+      />
+
+      <ModalFaktorPenghambat
+        open={editingPenghambatId !== null}
+        onOpenChange={(open) => { if (!open) setEditingPenghambatId(null); }}
+        kegiatanUtama={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ?? "" : ""}
+        indikator={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? "" : ""}
+        fieldValue={penghambatValue}
+        onFieldChange={setPenghambatValue}
+        onSave={() => {
+          if (editingPenghambatId !== null) {
+            setData((prev) =>
+              prev.map((item) =>
+                item.id === editingPenghambatId
+                  ? { ...item, faktorPenghambat: penghambatValue }
+                  : item
+              )
+            )
+            setEditingPenghambatId(null)
+          }
+        }}
+      />
     </div>
   )
 }
