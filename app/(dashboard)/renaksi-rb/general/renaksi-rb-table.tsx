@@ -22,6 +22,7 @@ type RenakSiRb = {
   target: string
   satuan: string
   capaian: string
+  subKegiatan: string
   anggaran: string
   faktorPenunjang: string
   faktorPenghambat: string
@@ -40,6 +41,7 @@ const initialData: RenakSiRb[] = [
     target: "1",
     satuan: "Dokumen",
     capaian: "100%",
+    subKegiatan: "-",
     anggaran: "Rp 50.000.000",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
@@ -56,6 +58,7 @@ const initialData: RenakSiRb[] = [
     target: "12",
     satuan: "Kegiatan",
     capaian: "83%",
+    subKegiatan: "-",
     anggaran: "Rp 100.000.000",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
@@ -72,6 +75,7 @@ const initialData: RenakSiRb[] = [
     target: "1",
     satuan: "Dokumen",
     capaian: "100%",
+    subKegiatan: "-",
     anggaran: "Rp 75.000.000",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
@@ -88,6 +92,7 @@ const initialData: RenakSiRb[] = [
     target: "25",
     satuan: "OPD",
     capaian: "72%",
+    subKegiatan: "-",
     anggaran: "Rp 150.000.000",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
@@ -104,6 +109,7 @@ const initialData: RenakSiRb[] = [
     target: "80",
     satuan: "Persen",
     capaian: "77%",
+    subKegiatan: "-",
     anggaran: "Rp 120.000.000",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
@@ -155,6 +161,7 @@ export function RenakSiRbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Satuan Output</TableHead>
               <TableHead rowSpan={2}>Capaian</TableHead>
+              <TableHead rowSpan={2}>Sub Kegiatan</TableHead>
               <TableHead>Biaya</TableHead>
               <TableHead rowSpan={2}>OPD Koordinator</TableHead>
               <TableHead rowSpan={2}>Pelaksana</TableHead>
@@ -176,7 +183,7 @@ export function RenakSiRbTable() {
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={15}
+                  colSpan={16}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -195,6 +202,9 @@ export function RenakSiRbTable() {
                   <TableCell>{item.target}</TableCell>
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
+                  <TableCell className="text-left">
+                    {item.subKegiatan}
+                  </TableCell>
                   <TableCell>{item.anggaran}</TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
