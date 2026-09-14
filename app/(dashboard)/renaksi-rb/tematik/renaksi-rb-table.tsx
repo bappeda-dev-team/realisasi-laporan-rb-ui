@@ -26,9 +26,11 @@ type RenakSiRb = {
   kegiatanUtama: string
   indikator: string
   target: string
+  realisasi: string
   satuan: string
   capaian: string
   anggaran: string
+  realisasiAnggaran: string
   faktorPenunjang: string
   faktorPenghambat: string
   opdKoordinator: string
@@ -44,9 +46,11 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
     indikator: "Terbitnya dokumen RB tingkat kabupaten",
     target: "1",
+    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 50.000.000",
+    realisasiAnggaran: "Rp 50.000.000",
     faktorPenunjang: "Komitmen pimpinan yang tinggi",
     faktorPenghambat: "Terbatasnya SDM",
     opdKoordinator: "Bagian Organisasi",
@@ -60,9 +64,11 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
     indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
     target: "12",
+    realisasi: "10",
     satuan: "Kegiatan",
     capaian: "83%",
     anggaran: "Rp 100.000.000",
+    realisasiAnggaran: "Rp 83.000.000",
     faktorPenunjang: "Dukungan anggaran yang memadai",
     faktorPenghambat: "Rendahnya partisipasi OPD",
     opdKoordinator: "Bagian Organisasi",
@@ -76,9 +82,11 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
     indikator: "Terbitnya SK Tim Reformasi Birokrasi",
     target: "1",
+    realisasi: "1",
     satuan: "Dokumen",
     capaian: "100%",
     anggaran: "Rp 75.000.000",
+    realisasiAnggaran: "Rp 75.000.000",
     faktorPenunjang: "Peraturan yang sudah jelas",
     faktorPenghambat: "Birokrasi yang berbelit",
     opdKoordinator: "Bagian Organisasi",
@@ -92,9 +100,11 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Pengembangan Sistem Kerja Digital",
     indikator: "OPD yang menerapkan e-Office",
     target: "25",
+    realisasi: "18",
     satuan: "OPD",
     capaian: "72%",
     anggaran: "Rp 150.000.000",
+    realisasiAnggaran: "Rp 108.000.000",
     faktorPenunjang: "Infrastruktur yang memadai",
     faktorPenghambat: "Keterbatasan kompetensi SDM",
     opdKoordinator: "Dinas Kominfo",
@@ -108,9 +118,11 @@ const initialData: RenakSiRb[] = [
     kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
     indikator: "Tercapainya nilai SAKIP",
     target: "80",
+    realisasi: "62",
     satuan: "Persen",
     capaian: "77%",
     anggaran: "Rp 120.000.000",
+    realisasiAnggaran: "Rp 92.400.000",
     faktorPenunjang: "Sistem monitoring yang baik",
     faktorPenghambat: "Data yang tidak konsisten",
     opdKoordinator: "Inspektorat",
@@ -164,12 +176,12 @@ export function RenakSiRbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Rencana Aksi</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead>
+              <TableHead colSpan={2}>
                 Periode Pelaksanaan
               </TableHead>
               <TableHead rowSpan={2}>Satuan Output</TableHead>
               <TableHead rowSpan={2}>Capaian</TableHead>
-              <TableHead>Biaya</TableHead>
+              <TableHead colSpan={2}>Biaya</TableHead>
               <TableHead rowSpan={2}>OPD Koordinator</TableHead>
               <TableHead rowSpan={2}>Pelaksana</TableHead>
               <TableHead rowSpan={2}>OPD Crosscutting</TableHead>
@@ -183,14 +195,16 @@ export function RenakSiRbTable() {
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
+              <TableHead>Realisasi</TableHead>
               <TableHead>Anggaran</TableHead>
+              <TableHead>Realisasi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={15}
+                  colSpan={17}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -207,9 +221,11 @@ export function RenakSiRbTable() {
                     {item.indikator}
                   </TableCell>
                   <TableCell>{item.target}</TableCell>
+                  <TableCell>{item.realisasi}</TableCell>
                   <TableCell>{item.satuan}</TableCell>
                   <TableCell>{item.capaian}</TableCell>
                   <TableCell>{item.anggaran}</TableCell>
+                  <TableCell>{item.realisasiAnggaran}</TableCell>
                   <TableCell className="text-left">
                     {item.opdKoordinator}
                   </TableCell>
