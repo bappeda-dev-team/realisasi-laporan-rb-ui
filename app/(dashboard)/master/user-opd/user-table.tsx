@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -13,60 +13,34 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type User = {
+type Pegawai = {
   id: number
-  nama: string
   nip: string
-  email: string
-  status: "Aktif" | "Nonaktif"
+  nama_pegawai: string
+  status_pegawai: string
 }
 
-const initialData: User[] = [
-  {
-    id: 1,
-    nama: "Andi Prasetyo",
-    nip: "198203051998031001",
-    email: "andi.prasetyo@mail.com",
-    status: "Aktif",
-  },
-  {
-    id: 2,
-    nama: "Sari Wulandari",
-    nip: "198710122005012002",
-    email: "sari.wulandari@mail.com",
-    status: "Aktif",
-  },
-  {
-    id: 3,
-    nama: "Bambang Sutrisno",
-    nip: "197512211999031003",
-    email: "bambang.sutrisno@mail.com",
-    status: "Nonaktif",
-  },
-  {
-    id: 4,
-    nama: "Dewi Lestari",
-    nip: "199002182010012004",
-    email: "dewi.lestari@mail.com",
-    status: "Aktif",
-  },
-  {
-    id: 5,
-    nama: "Rian Hidayat",
-    nip: "198806252011011005",
-    email: "rian.hidayat@mail.com",
-    status: "Nonaktif",
-  },
-]
-
 export function UserTable() {
-  const [data] = useState<User[]>(initialData)
+  const [data, setData] = useState<Pegawai[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredData = data.filter(
-    (d) =>
-      d.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.email.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    fetch("/api/kepegawaian/pegawai")
+      .then((r) => r.json())
+      .then((res: { data: Pegawai[] }) => {
+        setData(res.data ?? [])
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Gagal memuat data.")
+        setLoading(false)
+      })
+  }, [])
+
+  const filteredData = data.filter((d) =>
+    d.nama_pegawai.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -74,7 +48,7 @@ export function UserTable() {
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Cari nama/email..."
+          placeholder="Cari nama..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-8"
@@ -93,22 +67,36 @@ export function UserTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-destructive">
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   Tidak ada data ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredData.map((user, index) => (
-                <TableRow key={user.id}>
+              filteredData.map((pegawai, index) => (
+                <TableRow key={pegawai.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{user.nama}</TableCell>
-                  <TableCell>{user.nip}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{pegawai.nama_pegawai}</TableCell>
+                  <TableCell>{pegawai.nip}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
-                    <Badge variant={user.status === "Aktif" ? "default" : "destructive"}>
-                      {user.status}
+                    <Badge
+                      variant={pegawai.status_pegawai === "AKTIF" ? "default" : "destructive"}
+                    >
+                      {pegawai.status_pegawai}
                     </Badge>
                   </TableCell>
                 </TableRow>
