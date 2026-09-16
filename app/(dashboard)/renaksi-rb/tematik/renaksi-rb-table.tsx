@@ -97,6 +97,7 @@ type ApiResponse = {
 type RenakSiRb = {
   id: string
   kegiatanUtama: string
+  rencanaAksi: string
   indikator: string
   target: string
   satuan: string
@@ -131,11 +132,12 @@ function flatten(data: LaporanRb[]): RenakSiRb[] {
         rows.push({
           id: `${rb.id}-${aksi.id_rencana_aksi}-${ind.indikator}`,
           kegiatanUtama: rb.kegiatan_utama || emptyCell,
+          rencanaAksi: aksi.rencana_aksi,
           indikator: ind.indikator || emptyCell,
           target: firstTarget?.target ?? emptyCell,
           satuan: firstTarget?.satuan ?? emptyCell,
           capaian: firstTarget?.capaian ?? emptyCell,
-          subKegiatan: emptyCell,
+          subKegiatan: rb.kegiatan_utama || emptyCell,
           anggaran: formatAnggaran(aksi.anggaran, aksi.capaian_anggaran),
           faktorPenunjang: emptyCell,
           faktorPenghambat: emptyCell,
@@ -215,7 +217,7 @@ export function RenakSiRbTable() {
 
   const filteredData = data.filter(
     (d) =>
-      d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.rencanaAksi.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -225,7 +227,7 @@ export function RenakSiRbTable() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Cari kegiatan atau indikator..."
+            placeholder="Cari rencana aksi atau indikator..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"
@@ -244,33 +246,33 @@ export function RenakSiRbTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 [&_th]:text-center [&_td]:text-center">
+        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead rowSpan={2} className="w-12">
                 No
               </TableHead>
-              <TableHead rowSpan={2}>Rencana Aksi</TableHead>
-              <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead>Periode Pelaksanaan</TableHead>
-              <TableHead rowSpan={2}>Satuan Output</TableHead>
-              <TableHead rowSpan={2}>Capaian</TableHead>
-              <TableHead rowSpan={2}>Sub Kegiatan</TableHead>
-              <TableHead>Biaya</TableHead>
-              <TableHead rowSpan={2}>OPD Koordinator</TableHead>
-              <TableHead rowSpan={2}>Pelaksana</TableHead>
-              <TableHead rowSpan={2}>OPD Crosscutting</TableHead>
-              <TableHead rowSpan={2}>Pelaksana Cross</TableHead>
-              <TableHead rowSpan={2}>Keterangan</TableHead>
-              <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
-              <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
-              <TableHead rowSpan={2} className="w-28">
-                Aksi
+              <TableHead rowSpan={2} className="text-center w-80 whitespace-normal">Rencana Aksi</TableHead>
+              <TableHead rowSpan={2} className="text-center w-80 whitespace-normal">Indikator</TableHead>
+              <TableHead className="text-center w-40">
+                Periode Pelaksanaan
               </TableHead>
+              <TableHead rowSpan={2} className="text-center w-40 whitespace-normal">Satuan Output</TableHead>
+              <TableHead rowSpan={2} className="text-center w-30 whitespace-normal">Capaian</TableHead>
+              <TableHead rowSpan={2} className="text-center w-80 whitespace-normal">Sub Kegiatan</TableHead>
+              <TableHead className="text-center w-70 whitespace-normal">Biaya</TableHead>
+              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">OPD Koordinator</TableHead>
+              <TableHead rowSpan={2} className="text-center w-60 whitespace-normal">Pelaksana</TableHead>
+              <TableHead rowSpan={2} className="text-center w-80 whitespace-normal">OPD Crosscutting</TableHead>
+              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Pelaksana Cross</TableHead>
+              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Keterangan</TableHead>
+              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Faktor Penunjang</TableHead>
+              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Faktor Penghambat</TableHead>
+              <TableHead rowSpan={2} className="text-center w-40 whitespace-normal">Aksi</TableHead>
             </TableRow>
             <TableRow>
-              <TableHead>Target</TableHead>
-              <TableHead>Anggaran</TableHead>
+              <TableHead className="text-center">Target</TableHead>
+              <TableHead className="text-center">Anggaran</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -304,36 +306,36 @@ export function RenakSiRbTable() {
             ) : (
               filteredData.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell className="text-left">
-                    {item.kegiatanUtama}
+                  <TableCell className="text-center">{index + 1}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
+                    {item.rencanaAksi}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.indikator}
                   </TableCell>
-                  <TableCell>{item.target}</TableCell>
-                  <TableCell>{item.satuan}</TableCell>
-                  <TableCell>{item.capaian}</TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.target}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.satuan}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.capaian}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.subKegiatan}
                   </TableCell>
-                  <TableCell>{item.anggaran}</TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.anggaran}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.opdKoordinator}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.pelaksana}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.opdCrosscutting}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.pelaksanaCross}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.keterangan}
                   </TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     <div className="flex flex-col items-center gap-1">
                       <span>{item.faktorPenunjang}</span>
                       <span
@@ -361,7 +363,7 @@ export function RenakSiRbTable() {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">
                     <div className="flex items-center justify-center">
                       <Button variant="outline" size="sm" type="button">
                         <Upload className="size-3.5 mr-1" />
