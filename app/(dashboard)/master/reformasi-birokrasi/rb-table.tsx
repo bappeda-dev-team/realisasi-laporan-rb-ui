@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useFilter } from "@/components/filter-context"
@@ -13,8 +13,45 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+type TargetRb = {
+  id: string
+  id_indikator: string
+  tahun_baseline: number
+  target_baseline: string
+  realisasi_baseline: string
+  satuan_baseline: string
+  tahun_next: number
+  target_next: string
+  satuan_next: string
+}
+
+type IndikatorRb = {
+  id: string
+  id_rb: number
+  indikator: string
+  target: TargetRb[]
+}
+
 type ReformasiBirokrasi = {
   id: number
+  jenis_rb: string
+  kegiatan_utama: string
+  keterangan: string
+  indikator: IndikatorRb[]
+  tahun_baseline: number
+  tahun_next: number
+  sudah_diambil: boolean
+}
+
+type ApiResponse = {
+  code: number
+  status: string
+  message?: string
+  data: ReformasiBirokrasi[]
+}
+
+type Row = {
+  key: string
   jenisRb: string
   kegiatanUtama: string
   keterangan: string
@@ -31,101 +68,104 @@ type ReformasiBirokrasi = {
   }
 }
 
-const initialData: ReformasiBirokrasi[] = [
-  {
-    id: 1,
-    jenisRb: "Quick Wins",
-    kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
-    keterangan: "Dokumen RB tingkat kabupaten",
-    indikator: "Terbitnya dokumen RB",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-  },
-  {
-    id: 2,
-    jenisRb: "Area Perubahan",
-    kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
-    keterangan: "Penataan organisasi dan tata laksana",
-    indikator: "Terbitnya SK Tim Reformasi Birokrasi",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-  },
-  {
-    id: 3,
-    jenisRb: "Quick Wins",
-    kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
-    keterangan: "Sosialisasi kepada seluruh OPD",
-    indikator: "Jumlah kegiatan sosialisasi",
-    baseline: {
-      target: "12",
-      realisasi: "10",
-      satuan: "Kegiatan",
-      capaian: "83%",
-    },
-    berjalan: {
-      target: "12",
-      satuan: "Kegiatan",
-    },
-  },
-  {
-    id: 4,
-    jenisRb: "Program Unggulan",
-    kegiatanUtama: "Pengembangan Sistem Kerja Digital",
-    keterangan: "Penerapan e-Office di seluruh OPD",
-    indikator: "Jumlah OPD penerapan e-Office",
-    baseline: {
-      target: "25",
-      realisasi: "18",
-      satuan: "OPD",
-      capaian: "72%",
-    },
-    berjalan: {
-      target: "30",
-      satuan: "OPD",
-    },
-  },
-  {
-    id: 5,
-    jenisRb: "Area Perubahan",
-    kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
-    keterangan: "Peningkatan nilai SAKIP kabupaten",
-    indikator: "Nilai SAKIP kabupaten",
-    baseline: {
-      target: "80",
-      realisasi: "62",
-      satuan: "Persen",
-      capaian: "77%",
-    },
-    berjalan: {
-      target: "85",
-      satuan: "Persen",
-    },
-  },
-]
+function formatCapaian(target: string, realisasi: string): string {
+  const t = Number(target)
+  const r = Number(realisasi)
+  if (!Number.isFinite(t) || !Number.isFinite(r) || t <= 0) {
+    return "-"
+  }
+  return `${((r / t) * 100).toFixed(2).replace(/\.?0+$/, "")}%`
+}
+
+function flatten(data: ReformasiBirokrasi[]): Row[] {
+  const rows: Row[] = []
+  for (const rb of data) {
+    for (const ind of rb.indikator) {
+      const baselineTarget =
+        ind.target.find((t) => t.tahun_baseline !== 0) ?? ind.target[0]
+      const baseline = baselineTarget
+        ? {
+            target: baselineTarget.target_baseline,
+            realisasi: baselineTarget.realisasi_baseline,
+            satuan: baselineTarget.satuan_baseline,
+            capaian: formatCapaian(
+              baselineTarget.target_baseline,
+              baselineTarget.realisasi_baseline
+            ),
+          }
+        : { target: "", realisasi: "", satuan: "", capaian: "" }
+
+      const berjalanTarget =
+        ind.target.find((t) => t.tahun_next !== 0) ?? ind.target[0]
+      const berjalan = berjalanTarget
+        ? {
+            target: berjalanTarget.target_next,
+            satuan: berjalanTarget.satuan_next,
+          }
+        : { target: "", satuan: "" }
+
+      rows.push({
+        key: `${rb.id}-${ind.id}`,
+        jenisRb: rb.jenis_rb,
+        kegiatanUtama: rb.kegiatan_utama,
+        keterangan: rb.keterangan,
+        indikator: ind.indikator,
+        baseline,
+        berjalan,
+      })
+    }
+  }
+  return rows
+}
 
 export function RbTable() {
-  const [data] = useState<ReformasiBirokrasi[]>(initialData)
+  const [data, setData] = useState<ReformasiBirokrasi[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
 
-  const filteredData = data.filter(
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchData() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(
+          `/api/perencanaan/datamaster/rb?tahun_next=${tahun}`
+        )
+        if (!res.ok) {
+          throw new Error(`Gagal memuat data (status ${res.status})`)
+        }
+        const json: ApiResponse = await res.json()
+        if (!cancelled) {
+          setData(json.data ?? [])
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Terjadi kesalahan saat memuat data."
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchData()
+    return () => {
+      cancelled = true
+    }
+  }, [tahun])
+
+  const rows = flatten(data)
+  const filteredData = rows.filter(
     (d) =>
       d.jenisRb.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -168,7 +208,25 @@ export function RbTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={11}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={11}
+                  className="h-24 text-center text-destructive"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={11}
@@ -179,7 +237,7 @@ export function RbTable() {
               </TableRow>
             ) : (
               filteredData.map((item, index) => (
-                <TableRow key={item.id}>
+                <TableRow key={item.key}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell className="text-left">{item.jenisRb}</TableCell>
                   <TableCell className="text-left">
