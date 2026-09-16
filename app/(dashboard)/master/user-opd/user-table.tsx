@@ -56,14 +56,14 @@ export function UserTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 [&_th]:text-center [&_td]:text-center">
+        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">No</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>NIP</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="text-center whitespace-normal">No</TableHead>
+              <TableHead className="text-center whitespace-normal">Nama</TableHead>
+              <TableHead className="text-center whitespace-normal">NIP</TableHead>
+              <TableHead className="text-center whitespace-normal">Email</TableHead>
+              <TableHead className="text-center whitespace-normal">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -88,11 +88,11 @@ export function UserTable() {
             ) : (
               filteredData.map((pegawai, index) => (
                 <TableRow key={pegawai.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{pegawai.nama_pegawai}</TableCell>
-                  <TableCell>{pegawai.nip}</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{index + 1}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{pegawai.nama_pegawai}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{pegawai.nip}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">-</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">
                     <Badge
                       variant={pegawai.status_pegawai === "AKTIF" ? "default" : "destructive"}
                     >

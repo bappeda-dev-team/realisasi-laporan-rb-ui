@@ -83,15 +83,15 @@ export function OpdTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 [&_th]:text-center [&_td]:text-center">
+        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">No</TableHead>
-              <TableHead>Nama Perangkat Daerah</TableHead>
-              <TableHead>Nama Kepala Perangkat Daerah</TableHead>
-              <TableHead>NIP Kepala Perangkat Daerah</TableHead>
-              <TableHead>Pangkat Kepala Daerah</TableHead>
-              <TableHead>Kode Lembaga</TableHead>
+              <TableHead className="text-center whitespace-normal">Nama Perangkat Daerah</TableHead>
+              <TableHead className="text-center whitespace-normal">Nama Kepala Perangkat Daerah</TableHead>
+              <TableHead className="text-center whitespace-normal">NIP Kepala Perangkat Daerah</TableHead>
+              <TableHead className="text-center whitespace-normal">Pangkat Kepala Daerah</TableHead>
+              <TableHead className="text-center whitespace-normal">Kode Lembaga</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -117,11 +117,11 @@ export function OpdTable() {
               filteredData.map((opd, index) => (
                 <TableRow key={opd.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{opd.nama_opd}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{opd.nama_opd}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">-</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">-</TableCell>
                   <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>{opd.kode_lembaga}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{opd.kode_lembaga}</TableCell>
                 </TableRow>
               ))
             )}

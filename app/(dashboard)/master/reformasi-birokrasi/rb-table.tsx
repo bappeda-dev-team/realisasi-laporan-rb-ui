@@ -185,18 +185,18 @@ export function RbTable() {
       </div>
 
       <div className="rounded-md border">
-        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 [&_th]:text-center [&_td]:text-center">
+        <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0">
           <TableHeader>
             <TableRow>
-              <TableHead rowSpan={2} className="w-12">
+              <TableHead rowSpan={2} className="w-12 text-center whitespace-normal">
                 No
               </TableHead>
-              <TableHead rowSpan={2}>Jenis RB</TableHead>
-              <TableHead rowSpan={2}>Kegiatan Utama</TableHead>
-              <TableHead rowSpan={2}>Keterangan</TableHead>
-              <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={4}>BaseLine {baselineTahun}</TableHead>
-              <TableHead colSpan={2}>{tahun}</TableHead>
+              <TableHead rowSpan={2} className="text-center whitespace-normal">Jenis RB</TableHead>
+              <TableHead rowSpan={2} className="text-center whitespace-normal">Kegiatan Utama</TableHead>
+              <TableHead rowSpan={2} className="text-center whitespace-normal">Keterangan</TableHead>
+              <TableHead rowSpan={2} className="text-center whitespace-normal">Indikator</TableHead>
+              <TableHead colSpan={4} className="text-center whitespace-normal">BaseLine {baselineTahun}</TableHead>
+              <TableHead colSpan={2} className="text-center whitespace-normal">{tahun}</TableHead>
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
@@ -238,19 +238,19 @@ export function RbTable() {
             ) : (
               filteredData.map((item, index) => (
                 <TableRow key={item.key}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell className="text-left">{item.jenisRb}</TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{index + 1}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{item.jenisRb}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.kegiatanUtama}
                   </TableCell>
-                  <TableCell className="text-left">{item.keterangan}</TableCell>
-                  <TableCell className="text-left">{item.indikator}</TableCell>
-                  <TableCell>{item.baseline.target}</TableCell>
-                  <TableCell>{item.baseline.realisasi}</TableCell>
-                  <TableCell>{item.baseline.satuan}</TableCell>
-                  <TableCell>{item.baseline.capaian}</TableCell>
-                  <TableCell>{item.berjalan.target}</TableCell>
-                  <TableCell>{item.berjalan.satuan}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{item.keterangan}</TableCell>
+                  <TableCell className="text-left whitespace-normal wrap-break-word">{item.indikator}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.baseline.target}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.baseline.realisasi}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.baseline.satuan}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.baseline.capaian}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.berjalan.target}</TableCell>
+                  <TableCell className="text-center whitespace-normal wrap-break-word">{item.berjalan.satuan}</TableCell>
                 </TableRow>
               ))
             )}
