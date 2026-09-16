@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Pencil, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,9 +15,65 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type RenakSiRb = {
+type TargetRencanaAksi = {
+  target: string
+  realisasi: string
+  satuan: string
+  capaian: string
+  tahun: string
+}
+
+type IndikatorRencanaAksi = {
+  indikator: string
+  targets: TargetRencanaAksi[]
+}
+
+type PelaksanaCrosscutting = {
+  nip_pelaksana: string
+  nama_pelaksana: string
+}
+
+type OpdCrosscutting = {
+  id_pohon: number
+  kode_opd: string
+  nama_opd: string
+  pelaksana_crosscuttings: PelaksanaCrosscutting[]
+}
+
+type RencanaAksi = {
+  id_rencana_aksi: string
+  rencana_aksi: string
+  indikator_rencana_aksis: IndikatorRencanaAksi[]
+  anggaran: string
+  realisasi_anggaran: string
+  capaian_anggaran: string
+  opd_koordinator: string
+  nip_pelaksana: string
+  nama_pelaksana: string
+  opd_crosscuttings: OpdCrosscutting[] | null
+}
+
+type LaporanRb = {
   id: number
+  jenis_rb: string
+  kegiatan_utama: string
+  keterangan: string
+  tahun_baseline: number
+  tahun_next: number
+  rencana_aksis: RencanaAksi[]
+}
+
+type ApiResponse = {
+  code: number
+  status: string
+  message?: string
+  data: LaporanRb[]
+}
+
+type RenakSiRb = {
+  id: string
   kegiatanUtama: string
+  rencanaAksi: string
   indikator: string
   target: string
   satuan: string
@@ -33,105 +89,106 @@ type RenakSiRb = {
   keterangan: string
 }
 
-const initialData: RenakSiRb[] = [
-  {
-    id: 1,
-    kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
-    indikator: "Terbitnya dokumen RB tingkat kabupaten",
-    target: "1",
-    satuan: "Dokumen",
-    capaian: "100%",
-    subKegiatan: "-",
-    anggaran: "Rp 50.000.000",
-    faktorPenunjang: "Komitmen pimpinan yang tinggi",
-    faktorPenghambat: "Terbatasnya SDM",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "Inspektorat",
-    opdCrosscutting: "Dinas Kominfo",
-    pelaksanaCross: "Bagian Organisasi",
-    keterangan: "-",
-  },
-  {
-    id: 2,
-    kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
-    indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
-    target: "12",
-    satuan: "Kegiatan",
-    capaian: "83%",
-    subKegiatan: "-",
-    anggaran: "Rp 100.000.000",
-    faktorPenunjang: "Dukungan anggaran yang memadai",
-    faktorPenghambat: "Rendahnya partisipasi OPD",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "Seluruh OPD",
-    opdCrosscutting: "Inspektorat",
-    pelaksanaCross: "Bagian Organisasi",
-    keterangan: "-",
-  },
-  {
-    id: 3,
-    kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
-    indikator: "Terbitnya SK Tim Reformasi Birokrasi",
-    target: "1",
-    satuan: "Dokumen",
-    capaian: "100%",
-    subKegiatan: "-",
-    anggaran: "Rp 75.000.000",
-    faktorPenunjang: "Peraturan yang sudah jelas",
-    faktorPenghambat: "Birokrasi yang berbelit",
-    opdKoordinator: "Bagian Organisasi",
-    pelaksana: "BKPSDM",
-    opdCrosscutting: "BKPSDM",
-    pelaksanaCross: "Inspektorat",
-    keterangan: "-",
-  },
-  {
-    id: 4,
-    kegiatanUtama: "Pengembangan Sistem Kerja Digital",
-    indikator: "OPD yang menerapkan e-Office",
-    target: "25",
-    satuan: "OPD",
-    capaian: "72%",
-    subKegiatan: "-",
-    anggaran: "Rp 150.000.000",
-    faktorPenunjang: "Infrastruktur yang memadai",
-    faktorPenghambat: "Keterbatasan kompetensi SDM",
-    opdKoordinator: "Dinas Kominfo",
-    pelaksana: "Seluruh OPD",
-    opdCrosscutting: "Bagian Organisasi",
-    pelaksanaCross: "Dinas Kominfo",
-    keterangan: "-",
-  },
-  {
-    id: 5,
-    kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
-    indikator: "Tercapainya nilai SAKIP",
-    target: "80",
-    satuan: "Persen",
-    capaian: "77%",
-    subKegiatan: "-",
-    anggaran: "Rp 120.000.000",
-    faktorPenunjang: "Sistem monitoring yang baik",
-    faktorPenghambat: "Data yang tidak konsisten",
-    opdKoordinator: "Inspektorat",
-    pelaksana: "Seluruh OPD",
-    opdCrosscutting: "-",
-    pelaksanaCross: "-",
-    keterangan: "Perlu evaluasi berkala",
-  },
-]
+const emptyCell = "-"
+
+function formatAnggaran(anggaran: string, capaian: string): string {
+  if (!anggaran && (capaian === "" || capaian === "0%")) {
+    return `0 (0%)`
+  }
+  return `${anggaran || "0"} (${capaian || "0%"})`
+}
+
+function flatten(data: LaporanRb[]): RenakSiRb[] {
+  const rows: RenakSiRb[] = []
+  for (const rb of data) {
+    for (const aksi of rb.rencana_aksis) {
+      for (const ind of aksi.indikator_rencana_aksis) {
+        const firstTarget = ind.targets[0]
+        const crosscuttings = aksi.opd_crosscuttings ?? []
+        rows.push({
+          id: `${rb.id}-${aksi.id_rencana_aksi}-${ind.indikator}`,
+          kegiatanUtama: rb.kegiatan_utama,
+          rencanaAksi: aksi.rencana_aksi,
+          indikator: ind.indikator || emptyCell,
+          target: firstTarget?.target ?? emptyCell,
+          satuan: firstTarget?.satuan ?? emptyCell,
+          capaian: firstTarget?.capaian ?? emptyCell,
+          subKegiatan: rb.kegiatan_utama || emptyCell,
+          anggaran: formatAnggaran(aksi.anggaran, aksi.capaian_anggaran),
+          faktorPenunjang: emptyCell,
+          faktorPenghambat: emptyCell,
+          opdKoordinator: aksi.opd_koordinator || emptyCell,
+          pelaksana: aksi.nama_pelaksana || emptyCell,
+          opdCrosscutting:
+            crosscuttings
+              .map((o) => o.nama_opd)
+              .filter(Boolean)
+              .join(", ") || emptyCell,
+          pelaksanaCross:
+            crosscuttings
+              .flatMap((o) => o.pelaksana_crosscuttings)
+              .map((p) => p.nama_pelaksana)
+              .filter(Boolean)
+              .join(", ") || emptyCell,
+          keterangan: rb.keterangan || emptyCell,
+        })
+      }
+    }
+  }
+  return rows
+}
 
 export function RenakSiRbTable() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [data, setData] = useState(initialData)
-  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+  const [data, setData] = useState<RenakSiRb[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editingFaktorId, setEditingFaktorId] = useState<string | null>(null)
   const [faktorValue, setFaktorValue] = useState("")
-  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(null)
   const [penghambatValue, setPenghambatValue] = useState("")
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchData() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(
+          "/api/perencanaan/datamaster/rb/laporanByTahun/2025/GENERAL"
+        )
+        if (!res.ok) {
+          throw new Error(`Gagal memuat data (status ${res.status})`)
+        }
+        const json: ApiResponse = await res.json()
+        if (!cancelled) {
+          setData(flatten(json.data ?? []))
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Terjadi kesalahan saat memuat data."
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchData()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const filteredData = data.filter(
     (d) =>
-      d.kegiatanUtama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.rencanaAksi.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.indikator.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -140,7 +197,7 @@ export function RenakSiRbTable() {
       <div className="relative flex-1 max-w-sm">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Cari kegiatan atau indikator..."
+          placeholder="Cari rencana aksi atau indikator..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-8"
@@ -180,7 +237,25 @@ export function RenakSiRbTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={16}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={16}
+                  className="h-24 text-center text-destructive"
+                >
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={16}
@@ -194,7 +269,7 @@ export function RenakSiRbTable() {
                 <TableRow key={item.id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell className="text-left">
-                    {item.kegiatanUtama}
+                    {item.rencanaAksi}
                   </TableCell>
                   <TableCell className="text-left">
                     {item.indikator}

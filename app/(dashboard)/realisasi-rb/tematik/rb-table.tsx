@@ -229,7 +229,7 @@ export function RbTable() {
                   <TableCell className="text-left">{item.indikator}</TableCell>
                   <TableCell>{item.baseline.target}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col items-center gap-1">
+                    <div className="flex flex-col items-start gap-1">
                       {item.baseline.realisasi}
                       <span
                         className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
