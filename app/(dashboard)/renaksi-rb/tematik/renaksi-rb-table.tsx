@@ -12,8 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { ModalFaktorPenunjang } from "./modal-faktor-penunjang"
-import { ModalFaktorPenghambat } from "./modal-faktor-penghambat"
 import {
   Table,
   TableBody,
@@ -104,8 +102,6 @@ type RenakSiRb = {
   capaian: string
   subKegiatan: string
   anggaran: string
-  faktorPenunjang: string
-  faktorPenghambat: string
   opdKoordinator: string
   pelaksana: string
   opdCrosscutting: string
@@ -139,8 +135,6 @@ function flatten(data: LaporanRb[]): RenakSiRb[] {
           capaian: firstTarget?.capaian ?? emptyCell,
           subKegiatan: rb.kegiatan_utama || emptyCell,
           anggaran: formatAnggaran(aksi.anggaran, aksi.capaian_anggaran),
-          faktorPenunjang: emptyCell,
-          faktorPenghambat: emptyCell,
           opdKoordinator: aksi.opd_koordinator || emptyCell,
           pelaksana: aksi.nama_pelaksana || emptyCell,
           opdCrosscutting:
@@ -168,10 +162,6 @@ export function RenakSiRbTable() {
   const [data, setData] = useState<RenakSiRb[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingFaktorId, setEditingFaktorId] = useState<string | null>(null)
-  const [faktorValue, setFaktorValue] = useState("")
-  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(null)
-  const [penghambatValue, setPenghambatValue] = useState("")
 
   const loadDataRef = useRef<() => void>(() => {})
 
@@ -266,9 +256,6 @@ export function RenakSiRbTable() {
               <TableHead rowSpan={2} className="text-center w-80 whitespace-normal">OPD Crosscutting</TableHead>
               <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Pelaksana Cross</TableHead>
               <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Keterangan</TableHead>
-              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Faktor Penunjang</TableHead>
-              <TableHead rowSpan={2} className="text-center w-100 whitespace-normal">Faktor Penghambat</TableHead>
-              <TableHead rowSpan={2} className="text-center w-40 whitespace-normal">Aksi</TableHead>
             </TableRow>
             <TableRow>
               <TableHead className="text-center">Target</TableHead>
@@ -335,42 +322,6 @@ export function RenakSiRbTable() {
                   <TableCell className="text-left whitespace-normal wrap-break-word">
                     {item.keterangan}
                   </TableCell>
-                  <TableCell className="text-left whitespace-normal wrap-break-word">
-                    <div className="flex flex-col items-center gap-1">
-                      <span>{item.faktorPenunjang}</span>
-                      <span
-                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); } }}
-                      >
-                        <Pencil className="size-3 text-muted-foreground" />
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-left">
-                    <div className="flex flex-col items-center gap-1">
-                      <span>{item.faktorPenghambat}</span>
-                      <span
-                        className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); } }}
-                      >
-                        <Pencil className="size-3 text-muted-foreground" />
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center whitespace-normal wrap-break-word">
-                    <div className="flex items-center justify-center">
-                      <Button variant="outline" size="sm" type="button">
-                        <Upload className="size-3.5 mr-1" />
-                        Upload
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -408,49 +359,6 @@ export function RenakSiRbTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ModalFaktorPenunjang
-        open={editingFaktorId !== null}
-        onOpenChange={(open) => { if (!open) setEditingFaktorId(null); }}
-        title="Faktor Penunjang"
-        kegiatanUtama={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? "" : ""}
-        indikator={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.indikator ?? "" : ""}
-        fieldValue={faktorValue}
-        onFieldChange={setFaktorValue}
-        onSave={() => {
-          if (editingFaktorId !== null) {
-            setData((prev) =>
-              prev.map((item) =>
-                item.id === editingFaktorId
-                  ? { ...item, faktorPenunjang: faktorValue }
-                  : item
-              )
-            )
-            setEditingFaktorId(null)
-          }
-        }}
-      />
-
-      <ModalFaktorPenghambat
-        open={editingPenghambatId !== null}
-        onOpenChange={(open) => { if (!open) setEditingPenghambatId(null); }}
-        kegiatanUtama={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ?? "" : ""}
-        indikator={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? "" : ""}
-        fieldValue={penghambatValue}
-        onFieldChange={setPenghambatValue}
-        onSave={() => {
-          if (editingPenghambatId !== null) {
-            setData((prev) =>
-              prev.map((item) =>
-                item.id === editingPenghambatId
-                  ? { ...item, faktorPenghambat: penghambatValue }
-                  : item
-              )
-            )
-            setEditingPenghambatId(null)
-          }
-        }}
-      />
     </div>
   )
 }

@@ -1,19 +1,19 @@
 "use client"
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Collapsible as CollapsiblePrimitive } from "radix-ui";
 import { useFilter } from "@/components/filter-context";
 import {
   Building2,
   ChevronDown,
-  CircleDollarSign,
   ClipboardList,
   FileText,
   Landmark,
   LayoutDashboard,
+  LogOut,
   Scale,
-  Settings,
   UserRound,
 } from "lucide-react";
 import {
@@ -93,12 +93,35 @@ const navGroups = [
   },
 ] as const;
 
+type UserInfo = {
+  username?: string;
+  firstName?: string;
+  kode_opd?: string;
+  nip?: string;
+  roles?: string[];
+};
+
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { opd } = useFilter();
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/user-info")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: UserInfo | null) => setUser(data))
+      .catch(() => setUser(null));
+  }, []);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  async function handleLogout(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -164,11 +187,19 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg">
               <div className="flex flex-col leading-tight">
-                <span className="truncate font-medium">Admin Bappeda</span>
+                <span className="truncate font-medium">
+                  {user?.firstName || "Admin Bappeda"}
+                </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  admin@bappeda.go.id
+                  {user ? user.username || "-" : "admin@bappeda.go.id"}
                 </span>
               </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="sm" onClick={handleLogout} tooltip="Keluar">
+              <LogOut />
+              <span>Keluar</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

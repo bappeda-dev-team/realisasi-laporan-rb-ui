@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,8 +25,38 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type RealisasiRb = {
+type ApiTarget = {
+  id: string
+  id_indikator: string
+  tahun_baseline: number
+  target_baseline: string
+  realisasi_baseline: string
+  satuan_baseline: string
+  tahun_next: number
+  target_next: string
+  satuan_next: string
+}
+
+type ApiIndikator = {
+  id: string
+  id_rb: number
+  indikator: string
+  target: ApiTarget[]
+}
+
+type ApiRb = {
   id: number
+  jenis_rb: string
+  kegiatan_utama: string
+  keterangan: string
+  tahun_baseline: number
+  tahun_next: number
+  indikator: ApiIndikator[]
+  rencana_aksis: unknown[]
+}
+
+type RealisasiRb = {
+  id: string
   kegiatanUtama: string
   indikator: string
   baseline: {
@@ -44,113 +74,108 @@ type RealisasiRb = {
   faktorPenghambat: string
 }
 
-const initialData: RealisasiRb[] = [
-  {
-    id: 1,
-    kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
-    indikator: "Terbitnya dokumen RB tingkat kabupaten",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-    keterangan: "Dokumen RB tingkat kabupaten",
-    faktorPenunjang: "Komitmen pimpinan yang tinggi",
-    faktorPenghambat: "Terbatasnya SDM",
-  },
-  {
-    id: 2,
-    kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
-    indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
-    baseline: {
-      target: "12",
-      realisasi: "10",
-      satuan: "Kegiatan",
-      capaian: "83%",
-    },
-    berjalan: {
-      target: "12",
-      satuan: "Kegiatan",
-    },
-    keterangan: "Sosialisasi kepada seluruh OPD",
-    faktorPenunjang: "Dukungan anggaran yang memadai",
-    faktorPenghambat: "Rendahnya partisipasi OPD",
-  },
-  {
-    id: 3,
-    kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
-    indikator: "Terbitnya SK Tim Reformasi Birokrasi",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-    keterangan: "Penataan organisasi dan tata laksana",
-    faktorPenunjang: "Peraturan yang sudah jelas",
-    faktorPenghambat: "Birokrasi yang berbelit",
-  },
-  {
-    id: 4,
-    kegiatanUtama: "Pengembangan Sistem Kerja Digital",
-    indikator: "OPD yang menerapkan e-Office",
-    baseline: {
-      target: "25",
-      realisasi: "18",
-      satuan: "OPD",
-      capaian: "72%",
-    },
-    berjalan: {
-      target: "30",
-      satuan: "OPD",
-    },
-    keterangan: "Penerapan e-Office di seluruh OPD",
-    faktorPenunjang: "Infrastruktur yang memadai",
-    faktorPenghambat: "Keterbatasan kompetensi SDM",
-  },
-  {
-    id: 5,
-    kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
-    indikator: "Tercapainya nilai SAKIP",
-    baseline: {
-      target: "80",
-      realisasi: "62",
-      satuan: "Persen",
-      capaian: "77%",
-    },
-    berjalan: {
-      target: "85",
-      satuan: "Persen",
-    },
-    keterangan: "Peningkatan nilai SAKIP kabupaten",
-    faktorPenunjang: "Sistem monitoring yang baik",
-    faktorPenghambat: "Data yang tidak konsisten",
-  },
-]
+function mapApiToRows(
+  items: ApiRb[],
+  baselineTahun: number,
+  tahunNext: number
+): RealisasiRb[] {
+  const rows: RealisasiRb[] = []
+
+  items.forEach((item) => {
+    item.indikator.forEach((ind) => {
+      const baseline = ind.target.find(
+        (t) => t.tahun_baseline === baselineTahun
+      )
+      const next = ind.target.find((t) => t.tahun_next === tahunNext)
+
+      rows.push({
+        id: ind.id,
+        kegiatanUtama: item.kegiatan_utama,
+        indikator: ind.indikator,
+        baseline: {
+          target: baseline?.target_baseline ?? "",
+          realisasi: baseline?.realisasi_baseline ?? "",
+          satuan: baseline?.satuan_baseline ?? "",
+          capaian: "",
+        },
+        berjalan: {
+          target: next?.target_next ?? "",
+          satuan: next?.satuan_next ?? "",
+        },
+        keterangan: item.keterangan ?? "",
+        faktorPenunjang: "",
+        faktorPenghambat: "",
+      })
+    })
+  })
+
+  return rows
+}
 
 export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [data, setData] = useState<RealisasiRb[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // State edit realisasi baseline
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
   const [indikatorValue, setIndikatorValue] = useState("")
   const [realisasiValue, setRealisasiValue] = useState("")
-  const [data, setData] = useState(initialData)
-  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+
+  // State edit faktor penunjang
+  const [editingFaktorId, setEditingFaktorId] = useState<string | null>(null)
   const [faktorValue, setFaktorValue] = useState("")
-  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+
+  // State edit faktor penghambat
+  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(null)
   const [penghambatValue, setPenghambatValue] = useState("")
+
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
+
+  // fetch data
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(
+          `/api/perencanaan/datamaster/rb/laporanByTahun/${tahun}/TEMATIK`,
+          { cache: "no-store" }
+        )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+
+        if (!cancelled) {
+          const rows = mapApiToRows(
+            json.data ?? [],
+            baselineTahun,
+            Number(tahun)
+          )
+          setData(rows)
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            e instanceof Error ? e.message : "Gagal memuat data RB Tematik"
+          )
+          setData([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [tahun, baselineTahun])
 
   const filteredData = data.filter(
     (d) =>
@@ -210,12 +235,21 @@ export function RbTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {loading ? (
               <TableRow>
-                <TableCell
-                  colSpan={14}
-                  className="h-24 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={14} className="h-24 text-center text-destructive">
+                  {error}
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
                   Tidak ada data ditemukan.
                 </TableCell>
               </TableRow>
@@ -223,20 +257,32 @@ export function RbTable() {
               filteredData.map((item, index) => (
                 <TableRow key={item.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left!">
                     {item.kegiatanUtama}
                   </TableCell>
-                  <TableCell className="text-left">{item.indikator}</TableCell>
-                  <TableCell>{item.baseline.target}</TableCell>
+                  <TableCell className="text-left!">{item.indikator}</TableCell>
+                  <TableCell className="text-center">{item.baseline.target}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col items-start gap-1">
+                    <div className="flex flex-col items-center gap-1 text-center">
                       {item.baseline.realisasi}
                       <span
                         className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); }}
+                        onClick={() => {
+                          setEditingId(item.id)
+                          setKegiatanUtamaValue(item.kegiatanUtama)
+                          setIndikatorValue(item.indikator)
+                          setRealisasiValue(item.baseline.realisasi)
+                        }}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingId(item.id); setKegiatanUtamaValue(item.kegiatanUtama); setIndikatorValue(item.indikator); setRealisasiValue(item.baseline.realisasi); } }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setEditingId(item.id)
+                            setKegiatanUtamaValue(item.kegiatanUtama)
+                            setIndikatorValue(item.indikator)
+                            setRealisasiValue(item.baseline.realisasi)
+                          }
+                        }}
                       >
                         <Pencil className="size-3 text-muted-foreground" />
                       </span>
@@ -252,10 +298,18 @@ export function RbTable() {
                       <span>{item.faktorPenunjang}</span>
                       <span
                         className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); }}
+                        onClick={() => {
+                          setEditingFaktorId(item.id)
+                          setFaktorValue(item.faktorPenunjang)
+                        }}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingFaktorId(item.id); setFaktorValue(item.faktorPenunjang); } }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setEditingFaktorId(item.id)
+                            setFaktorValue(item.faktorPenunjang)
+                          }
+                        }}
                       >
                         <Pencil className="size-3 text-muted-foreground" />
                       </span>
@@ -266,10 +320,18 @@ export function RbTable() {
                       <span>{item.faktorPenghambat}</span>
                       <span
                         className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
-                        onClick={() => { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); }}
+                        onClick={() => {
+                          setEditingPenghambatId(item.id)
+                          setPenghambatValue(item.faktorPenghambat)
+                        }}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === "Enter") { setEditingPenghambatId(item.id); setPenghambatValue(item.faktorPenghambat); } }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setEditingPenghambatId(item.id)
+                            setPenghambatValue(item.faktorPenghambat)
+                          }
+                        }}
                       >
                         <Pencil className="size-3 text-muted-foreground" />
                       </span>

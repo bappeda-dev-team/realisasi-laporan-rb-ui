@@ -19,22 +19,9 @@ import {
 } from "@/components/ui/dialog"
 import { useFilter } from "@/components/filter-context"
 
-const daftarOpd = [
-  "Semua OPD",
-  "Bappeda",
-  "Dinas Kesehatan",
-  "Dinas Pendidikan",
-  "Dinas PUPR",
-  "Dinas Pertanian",
-  "Dinas Sosial",
-  "Dinas Tenaga Kerja",
-  "Dinas Lingkungan Hidup",
-  "Dinas Perhubungan",
-]
-
 const daftarPeriode = ["Semester I", "Semester II", "Tahun Penuh"]
 
-const daftarTahun = ["2024", "2025", "2026"]
+const daftarTahun = ["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"]
 
 const daftarBulan = [
   "Januari",
@@ -51,6 +38,8 @@ const daftarBulan = [
   "Desember",
 ]
 
+type OpdItem = { id: string | number; nama: string }
+
 export function FilterNavbar() {
   const { opd, setOpd, periode, setPeriode, tahun, setTahun, bulan, setBulan } =
     useFilter()
@@ -59,6 +48,58 @@ export function FilterNavbar() {
   const [draftTahun, setDraftTahun] = useState(tahun)
   const [draftBulan, setDraftBulan] = useState(bulan)
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  const [daftarOpd, setDaftarOpd] = useState<string[]>(["Semua OPD"])
+  const [loadingOpd, setLoadingOpd] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchOpd() {
+      try {
+        setLoadingOpd(true)
+        const res = await fetch("/api/kepegawaian/opd/all", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        })
+        if (!res.ok) throw new Error(`Gagal memuat OPD (${res.status})`)
+        const json = await res.json()
+
+        // Normalisasi response: dukung array of string, array of object {id,nama},
+        // atau objek { data: [...] }
+        const raw: unknown = Array.isArray(json) ? json : json?.data ?? []
+        const list: OpdItem[] = (Array.isArray(raw) ? raw : [])
+          .map((item) => {
+            if (typeof item === "string") return { id: item, nama: item }
+            if (item && typeof item === "object") {
+              const obj = item as Record<string, unknown>
+              const nama =
+                (obj.nama as string) ??
+                (obj.name as string) ??
+                (obj.nama_opd as string) ??
+                (obj.label as string) ??
+                ""
+              const id = (obj.id as string | number) ?? nama
+              return { id, nama }
+            }
+            return null
+          })
+          .filter((v): v is OpdItem => !!v && !!v.nama)
+
+        if (!cancelled) {
+          setDaftarOpd(["Semua OPD", ...list.map((o) => o.nama)])
+        }
+      } catch (err) {
+        console.error("Gagal mengambil daftar OPD:", err)
+        if (!cancelled) setDaftarOpd(["Semua OPD"])
+      } finally {
+        if (!cancelled) setLoadingOpd(false)
+      }
+    }
+    fetchOpd()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!dialogOpen) return
@@ -70,15 +111,24 @@ export function FilterNavbar() {
     <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+        <Separator
+          orientation="vertical"
+          className="mr-2 data-[orientation=vertical]:h-4"
+        />
       </div>
 
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">OPD</span>
-          <Select value={draftOpd} onValueChange={setDraftOpd}>
+          <Select
+            value={draftOpd}
+            onValueChange={setDraftOpd}
+            disabled={loadingOpd}
+          >
             <SelectTrigger size="sm">
-              <SelectValue />
+              <SelectValue
+                placeholder={loadingOpd ? "Memuat..." : "Pilih OPD"}
+              />
             </SelectTrigger>
             <SelectContent>
               {daftarOpd.map((item) => (

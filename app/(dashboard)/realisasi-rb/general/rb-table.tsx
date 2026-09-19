@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Pencil, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,8 +17,39 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type RealisasiRb = {
+type ApiTarget = {
+  id: string
+  id_indikator: string
+  tahun_baseline: number
+  target_baseline: string
+  realisasi_baseline: string
+  satuan_baseline: string
+  tahun_next: number
+  target_next: string
+  satuan_next: string
+}
+
+type ApiIndikator = {
+  id: string
+  id_rb: number
+  indikator: string
+  target: ApiTarget[]
+}
+
+type ApiRb = {
   id: number
+  jenis_rb: string
+  kegiatan_utama: string
+  keterangan: string
+  tahun_baseline: number
+  tahun_next: number
+  indikator: ApiIndikator[]
+  rencana_aksis: unknown[]
+}
+
+// tipe data tabel
+type RealisasiRb = {
+  id: string
   kegiatanUtama: string
   indikator: string
   baseline: {
@@ -36,112 +67,110 @@ type RealisasiRb = {
   faktorPenghambat: string
 }
 
-const initialData: RealisasiRb[] = [
-  {
-    id: 1,
-    kegiatanUtama: "Penyusunan Dokumen Reformasi Birokrasi",
-    indikator: "Terbitnya dokumen RB tingkat kabupaten",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-    keterangan: "Dokumen RB tingkat kabupaten",
-    faktorPenunjang: "Komitmen pimpinan yang tinggi",
-    faktorPenghambat: "Terbatasnya SDM",
-  },
-  {
-    id: 2,
-    kegiatanUtama: "Sosialisasi Reformasi Birokrasi",
-    indikator: "Jumlah kegiatan sosialisasi yang dilaksanakan",
-    baseline: {
-      target: "12",
-      realisasi: "10",
-      satuan: "Kegiatan",
-      capaian: "83%",
-    },
-    berjalan: {
-      target: "12",
-      satuan: "Kegiatan",
-    },
-    keterangan: "Sosialisasi kepada seluruh OPD",
-    faktorPenunjang: "Dukungan anggaran yang memadai",
-    faktorPenghambat: "Rendahnya partisipasi OPD",
-  },
-  {
-    id: 3,
-    kegiatanUtama: "Penguatan Organisasi dan Tata Laksana",
-    indikator: "Terbitnya SK Tim Reformasi Birokrasi",
-    baseline: {
-      target: "1",
-      realisasi: "1",
-      satuan: "Dokumen",
-      capaian: "100%",
-    },
-    berjalan: {
-      target: "1",
-      satuan: "Dokumen",
-    },
-    keterangan: "Penataan organisasi dan tata laksana",
-    faktorPenunjang: "Peraturan yang sudah jelas",
-    faktorPenghambat: "Birokrasi yang berbelit",
-  },
-  {
-    id: 4,
-    kegiatanUtama: "Pengembangan Sistem Kerja Digital",
-    indikator: "OPD yang menerapkan e-Office",
-    baseline: {
-      target: "25",
-      realisasi: "18",
-      satuan: "OPD",
-      capaian: "72%",
-    },
-    berjalan: {
-      target: "30",
-      satuan: "OPD",
-    },
-    keterangan: "Penerapan e-Office di seluruh OPD",
-    faktorPenunjang: "Infrastruktur yang memadai",
-    faktorPenghambat: "Keterbatasan kompetensi SDM",
-  },
-  {
-    id: 5,
-    kegiatanUtama: "Penguatan Akuntabilitas Kinerja",
-    indikator: "Tercapainya nilai SAKIP",
-    baseline: {
-      target: "80",
-      realisasi: "62",
-      satuan: "Persen",
-      capaian: "77%",
-    },
-    berjalan: {
-      target: "85",
-      satuan: "Persen",
-    },
-    keterangan: "Peningkatan nilai SAKIP kabupaten",
-    faktorPenunjang: "Sistem monitoring yang baik",
-    faktorPenghambat: "Data yang tidak konsisten",
-  },
-]
+function mapApiToRows(
+  items: ApiRb[],
+  baselineTahun: number,
+  tahunNext: number
+): RealisasiRb[] {
+  const rows: RealisasiRb[] = []
+
+  items.forEach((item) => {
+    item.indikator.forEach((ind) => {
+      const baseline = ind.target.find(
+        (t) => t.tahun_baseline === baselineTahun
+      )
+      const next = ind.target.find((t) => t.tahun_next === tahunNext)
+
+      rows.push({
+        id: ind.id,
+        kegiatanUtama: item.kegiatan_utama,
+        indikator: ind.indikator,
+        baseline: {
+          target: baseline?.target_baseline ?? "",
+          realisasi: baseline?.realisasi_baseline ?? "",
+          satuan: baseline?.satuan_baseline ?? "",
+          // dibiarkan kosong; akan diisi backend / hasil edit modal
+          capaian: "",
+        },
+        berjalan: {
+          target: next?.target_next ?? "",
+          satuan: next?.satuan_next ?? "",
+        },
+        keterangan: item.keterangan ?? "",
+        faktorPenunjang: "",
+        faktorPenghambat: "",
+      })
+    })
+  })
+
+  return rows
+}
 
 export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const [data, setData] = useState<RealisasiRb[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // State edit realisasi baseline
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
   const [indikatorValue, setIndikatorValue] = useState("")
   const [realisasiValue, setRealisasiValue] = useState("")
-  const [data, setData] = useState(initialData)
-  const [editingFaktorId, setEditingFaktorId] = useState<number | null>(null)
+
+  // State edit faktor penunjang
+  const [editingFaktorId, setEditingFaktorId] = useState<string | null>(null)
   const [faktorValue, setFaktorValue] = useState("")
-  const [editingPenghambatId, setEditingPenghambatId] = useState<number | null>(null)
+
+  // State edit faktor penghambat
+  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(
+    null
+  )
   const [penghambatValue, setPenghambatValue] = useState("")
+
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
+
+  // fetch data
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(
+          `/api/perencanaan/datamaster/rb/laporanByTahun/${tahun}/GENERAL`,
+          { cache: "no-store" }
+        )
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+
+        if (!cancelled) {
+          const rows = mapApiToRows(
+            json.data ?? [],
+            baselineTahun,
+            Number(tahun)
+          )
+          setData(rows)
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            e instanceof Error ? e.message : "Gagal memuat data RB General"
+          )
+          setData([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [tahun, baselineTahun])
 
   const filteredData = data.filter(
     (d) =>
@@ -202,10 +231,10 @@ export function RbTable() {
               filteredData.map((item, index) => (
                 <TableRow key={item.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left!">
                     {item.kegiatanUtama}
                   </TableCell>
-                  <TableCell className="text-left">{item.indikator}</TableCell>
+                  <TableCell className="text-left!">{item.indikator}</TableCell>
                   <TableCell>{item.baseline.target}</TableCell>
                   <TableCell>
                     <div className="flex flex-col items-center gap-1">
