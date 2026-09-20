@@ -21,7 +21,19 @@ import { useFilter } from "@/components/filter-context"
 
 const daftarPeriode = ["Semester I", "Semester II", "Tahun Penuh"]
 
-const daftarTahun = ["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"]
+const daftarTahun = [
+  "2020",
+  "2021",
+  "2022",
+  "2023",
+  "2024",
+  "2025",
+  "2026",
+  "2027",
+  "2028",
+  "2029",
+  "2030",
+]
 
 const daftarBulan = [
   "Januari",
@@ -43,6 +55,7 @@ type OpdItem = { id: string | number; nama: string }
 export function FilterNavbar() {
   const { opd, setOpd, periode, setPeriode, tahun, setTahun, bulan, setBulan } =
     useFilter()
+
   const [draftOpd, setDraftOpd] = useState(opd)
   const [draftPeriode, setDraftPeriode] = useState(periode)
   const [draftTahun, setDraftTahun] = useState(tahun)
@@ -52,6 +65,24 @@ export function FilterNavbar() {
   const [daftarOpd, setDaftarOpd] = useState<string[]>(["Semua OPD"])
   const [loadingOpd, setLoadingOpd] = useState(true)
 
+  // --- Sinkronisasi draft ketika Context berubah (setelah hydrate) ---
+  useEffect(() => {
+    setDraftOpd(opd)
+  }, [opd])
+
+  useEffect(() => {
+    setDraftPeriode(periode)
+  }, [periode])
+
+  useEffect(() => {
+    setDraftTahun(tahun)
+  }, [tahun])
+
+  useEffect(() => {
+    setDraftBulan(bulan)
+  }, [bulan])
+
+  // --- Fetch daftar OPD ---
   useEffect(() => {
     let cancelled = false
     async function fetchOpd() {
@@ -64,8 +95,6 @@ export function FilterNavbar() {
         if (!res.ok) throw new Error(`Gagal memuat OPD (${res.status})`)
         const json = await res.json()
 
-        // Normalisasi response: dukung array of string, array of object {id,nama},
-        // atau objek { data: [...] }
         const raw: unknown = Array.isArray(json) ? json : json?.data ?? []
         const list: OpdItem[] = (Array.isArray(raw) ? raw : [])
           .map((item) => {
@@ -101,6 +130,16 @@ export function FilterNavbar() {
     }
   }, [])
 
+  // --- Validasi: kalau OPD tersimpan sudah tidak ada di daftar, reset ke "Semua OPD" ---
+  useEffect(() => {
+    if (loadingOpd) return
+    if (draftOpd && !daftarOpd.includes(draftOpd)) {
+      setDraftOpd("Semua OPD")
+      setOpd("Semua OPD")
+    }
+  }, [loadingOpd, daftarOpd, draftOpd, setOpd])
+
+  // --- Auto close dialog ---
   useEffect(() => {
     if (!dialogOpen) return
     const timer = setTimeout(() => setDialogOpen(false), 2000)
