@@ -37,12 +37,19 @@ export async function proxyUpstream(
     headers: upstreamHeaders,
     cache: "no-store",
   }
+
   if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = request.body
+    // Baca body sebagai buffer agar tidak butuh duplex option
+    init.body = await request.arrayBuffer()
   }
 
   const upstream = await fetch(url, init)
   const body = await upstream.text()
+
+  // log sementara
+  // console.log("[proxyUpstream]", request.method, url)
+  // console.log("[proxyUpstream] status:", upstream.status)
+  // console.log("[proxyUpstream] body:", body)
 
   const responseHeaders = new Headers()
   const upstreamContentType = upstream.headers.get("content-type")

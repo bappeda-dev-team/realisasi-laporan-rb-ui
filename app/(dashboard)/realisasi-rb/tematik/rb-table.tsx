@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
+import { FileText, Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -55,23 +55,46 @@ type ApiRb = {
   rencana_aksis: unknown[]
 }
 
+type ApiRealisasi = {
+  id: number
+  kode_opd: string
+  nip: string
+  tahun: string
+  bulan: string
+  id_rb_tematik: string
+  id_indikator_rb_tematik: string
+  id_target_rb_tematik: string
+  realisasi: number
+  jenis_realisasi: string
+  faktor_penunjang: string
+  faktor_penghambat: string
+  bukti_pendukung: string
+  keterangan_bukti_pendukung: string
+  target: number | null
+  capaian: number | null
+}
+
 type RealisasiRb = {
   id: string
+  idRb: number
+  idTarget: string
   kegiatanUtama: string
   indikator: string
   baseline: {
+    target: string
+    satuan: string
+  }
+  berjalan: {
     target: string
     realisasi: string
     satuan: string
     capaian: string
   }
-  berjalan: {
-    target: string
-    satuan: string
-  }
   keterangan: string
   faktorPenunjang: string
   faktorPenghambat: string
+  buktiPendukung: string
+  keteranganBuktiPendukung: string
 }
 
 function mapApiToRows(
@@ -90,21 +113,25 @@ function mapApiToRows(
 
       rows.push({
         id: ind.id,
+        idRb: ind.id_rb,
+        idTarget: next?.id ?? baseline?.id ?? "",
         kegiatanUtama: item.kegiatan_utama,
         indikator: ind.indikator,
         baseline: {
           target: baseline?.target_baseline ?? "",
-          realisasi: baseline?.realisasi_baseline ?? "",
           satuan: baseline?.satuan_baseline ?? "",
-          capaian: "",
         },
         berjalan: {
           target: next?.target_next ?? "",
+          realisasi: "",
           satuan: next?.satuan_next ?? "",
+          capaian: "",
         },
         keterangan: item.keterangan ?? "",
         faktorPenunjang: "",
         faktorPenghambat: "",
+        buktiPendukung: "",
+        keteranganBuktiPendukung: "",
       })
     })
   })
@@ -112,31 +139,104 @@ function mapApiToRows(
   return rows
 }
 
+function mergeRealisasi(
+  rows: RealisasiRb[],
+  realisasiList: ApiRealisasi[]
+): RealisasiRb[] {
+  const map = new Map<string, ApiRealisasi>()
+  realisasiList.forEach((r) => {
+    const key = r.id_indikator_rb_tematik
+    const existing = map.get(key)
+    if (!existing || r.id > existing.id) {
+      map.set(key, r)
+    }
+  })
+
+  return rows.map((row) => {
+    const r = map.get(row.id)
+    if (!r) return row
+    return {
+      ...row,
+      berjalan: {
+        ...row.berjalan,
+        realisasi: r.realisasi !== undefined ? String(r.realisasi) : "",
+        capaian:
+          r.capaian !== null && r.capaian !== undefined
+            ? String(r.capaian)
+            : "",
+      },
+      faktorPenunjang: r.faktor_penunjang ?? "",
+      faktorPenghambat: r.faktor_penghambat ?? "",
+      buktiPendukung: r.bukti_pendukung ?? "",
+      keteranganBuktiPendukung: r.keterangan_bukti_pendukung ?? "",
+    }
+  })
+}
+
 export function RbTable() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [dialogAction, setDialogAction] = useState<"sinkronisasi" | "kunci" | null>(null)
+  const [dialogAction, setDialogAction] = useState<
+    "sinkronisasi" | "kunci" | null
+  >(null)
   const [data, setData] = useState<RealisasiRb[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState<{
+    kodeOpd: string
+    nip: string
+  } | null>(null)
 
-  // State edit realisasi baseline
+  // State edit realisasi
   const [editingId, setEditingId] = useState<string | null>(null)
   const [kegiatanUtamaValue, setKegiatanUtamaValue] = useState("")
   const [indikatorValue, setIndikatorValue] = useState("")
   const [realisasiValue, setRealisasiValue] = useState("")
+  const [buktiPendukungValue, setBuktiPendukungValue] = useState("")
+
+  const editingRow = editingId
+    ? data.find((d) => d.id === editingId) ?? null
+    : null
 
   // State edit faktor penunjang
   const [editingFaktorId, setEditingFaktorId] = useState<string | null>(null)
   const [faktorValue, setFaktorValue] = useState("")
 
   // State edit faktor penghambat
-  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(null)
+  const [editingPenghambatId, setEditingPenghambatId] = useState<string | null>(
+    null
+  )
   const [penghambatValue, setPenghambatValue] = useState("")
 
   const { tahun } = useFilter()
   const baselineTahun = Number(tahun) - 1
 
-  // fetch data
+  // fetch user info
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadUser() {
+      try {
+        const res = await fetch("/api/auth/user-info", { cache: "no-store" })
+        if (!res.ok) return
+        const json = await res.json()
+        if (!cancelled) {
+          setUserInfo({
+            kodeOpd: json.kode_opd ?? json.kodeOpd ?? "",
+            nip: json.nip ?? "",
+          })
+        }
+      } catch {
+        // diamkan saja
+      }
+    }
+
+    loadUser()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // fetch master + realisasi
   useEffect(() => {
     let cancelled = false
 
@@ -144,21 +244,40 @@ export function RbTable() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(
+        // 1. master tematik
+        const masterRes = await fetch(
           `/api/perencanaan/datamaster/rb/laporanByTahun/${tahun}/TEMATIK`,
           { cache: "no-store" }
         )
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const json = await res.json()
+        if (!masterRes.ok) throw new Error(`HTTP ${masterRes.status}`)
+        const masterJson = await masterRes.json()
 
-        if (!cancelled) {
-          const rows = mapApiToRows(
-            json.data ?? [],
-            baselineTahun,
-            Number(tahun)
-          )
-          setData(rows)
+        let rows = mapApiToRows(
+          masterJson.data ?? [],
+          baselineTahun,
+          Number(tahun)
+        )
+
+        // 2. realisasi tematik
+        if (userInfo?.nip && userInfo?.kodeOpd) {
+          try {
+            const realisasiRes = await fetch(
+              `/api/realisasi/laporanrbtematik/nip/${userInfo.nip}/kodeOpd/${userInfo.kodeOpd}/tahun/${tahun}/perencanaan`,
+              { cache: "no-store" }
+            )
+            if (realisasiRes.ok) {
+              const realisasiJson = await realisasiRes.json()
+              const list: ApiRealisasi[] = Array.isArray(realisasiJson)
+                ? realisasiJson
+                : realisasiJson.data ?? []
+              rows = mergeRealisasi(rows, list)
+            }
+          } catch {
+            // diamkan saja
+          }
         }
+
+        if (!cancelled) setData(rows)
       } catch (e) {
         if (!cancelled) {
           setError(
@@ -175,7 +294,7 @@ export function RbTable() {
     return () => {
       cancelled = true
     }
-  }, [tahun, baselineTahun])
+  }, [tahun, baselineTahun, userInfo?.nip, userInfo?.kodeOpd])
 
   const filteredData = data.filter(
     (d) =>
@@ -196,18 +315,28 @@ export function RbTable() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" type="button" onClick={() => setDialogAction("sinkronisasi")}>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => setDialogAction("sinkronisasi")}
+          >
             <RefreshCw className="size-3.5 mr-1" />
             Sinkronisasi
           </Button>
-          <Button variant="outline" size="sm" type="button" onClick={() => setDialogAction("kunci")}>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => setDialogAction("kunci")}
+          >
             <Lock className="size-3.5 mr-1" />
             Kunci
           </Button>
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table className="[&_th]:border-r [&_td]:border-r [&_th:last-child]:border-r-0 [&_td:last-child]:border-r-0 [&_th]:text-center [&_td]:text-center">
           <TableHeader>
             <TableRow>
@@ -216,40 +345,50 @@ export function RbTable() {
               </TableHead>
               <TableHead rowSpan={2}>Kegiatan Utama</TableHead>
               <TableHead rowSpan={2}>Indikator</TableHead>
-              <TableHead colSpan={4}>BaseLine {baselineTahun}</TableHead>
-              <TableHead colSpan={2}>{tahun}</TableHead>
+              <TableHead colSpan={2}>BaseLine {baselineTahun}</TableHead>
+              <TableHead colSpan={4}>{tahun}</TableHead>
               <TableHead rowSpan={2}>Keterangan</TableHead>
               <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
               <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
-              <TableHead rowSpan={2} className="w-28">
+              <TableHead rowSpan={2}>Bukti Pendukung</TableHead>
+              <TableHead rowSpan={2} className="w-24">
                 Aksi
               </TableHead>
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
+              <TableHead>Satuan</TableHead>
+              <TableHead>Target</TableHead>
               <TableHead>Realisasi</TableHead>
               <TableHead>Satuan</TableHead>
               <TableHead>Capaian</TableHead>
-              <TableHead>Target</TableHead>
-              <TableHead>Satuan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={14}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   Memuat data...
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={14} className="h-24 text-center text-destructive">
+                <TableCell
+                  colSpan={14}
+                  className="h-24 text-center text-destructive"
+                >
                   {error}
                 </TableCell>
               </TableRow>
             ) : filteredData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={14} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={14}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   Tidak ada data ditemukan.
                 </TableCell>
               </TableRow>
@@ -261,17 +400,24 @@ export function RbTable() {
                     {item.kegiatanUtama}
                   </TableCell>
                   <TableCell className="text-left!">{item.indikator}</TableCell>
-                  <TableCell className="text-center">{item.baseline.target}</TableCell>
+
+                  {/* Baseline */}
+                  <TableCell>{item.baseline.target}</TableCell>
+                  <TableCell>{item.baseline.satuan}</TableCell>
+
+                  {/* Tahun berjalan */}
+                  <TableCell>{item.berjalan.target}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col items-center gap-1 text-center">
-                      {item.baseline.realisasi}
+                    <div className="flex flex-col items-center gap-1">
+                      {item.berjalan.realisasi}
                       <span
                         className="inline-flex items-center justify-center size-5 rounded-full border border-muted-foreground cursor-pointer hover:bg-muted"
                         onClick={() => {
                           setEditingId(item.id)
                           setKegiatanUtamaValue(item.kegiatanUtama)
                           setIndikatorValue(item.indikator)
-                          setRealisasiValue(item.baseline.realisasi)
+                          setRealisasiValue(item.berjalan.realisasi)
+                          setBuktiPendukungValue(item.buktiPendukung)
                         }}
                         role="button"
                         tabIndex={0}
@@ -280,7 +426,8 @@ export function RbTable() {
                             setEditingId(item.id)
                             setKegiatanUtamaValue(item.kegiatanUtama)
                             setIndikatorValue(item.indikator)
-                            setRealisasiValue(item.baseline.realisasi)
+                            setRealisasiValue(item.berjalan.realisasi)
+                            setBuktiPendukungValue(item.buktiPendukung)
                           }
                         }}
                       >
@@ -288,10 +435,10 @@ export function RbTable() {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>{item.baseline.satuan}</TableCell>
-                  <TableCell>{item.baseline.capaian}</TableCell>
-                  <TableCell>{item.berjalan.target}</TableCell>
                   <TableCell>{item.berjalan.satuan}</TableCell>
+                  <TableCell>{item.berjalan.capaian}</TableCell>
+
+                  {/* Info */}
                   <TableCell className="text-left">{item.keterangan}</TableCell>
                   <TableCell className="text-left">
                     <div className="flex flex-col items-center gap-1">
@@ -337,9 +484,40 @@ export function RbTable() {
                       </span>
                     </div>
                   </TableCell>
+
+                  {/* Bukti Pendukung */}
+                  <TableCell className="text-left">
+                    {item.buktiPendukung ? (
+                      <a
+                        href={item.buktiPendukung}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-blue-600 underline hover:text-blue-800"
+                      >
+                        <FileText className="size-3" />
+                        Lihat Bukti
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        Belum ada
+                      </span>
+                    )}
+                  </TableCell>
+
                   <TableCell>
                     <div className="flex items-center justify-center">
-                      <Button variant="outline" size="sm" type="button">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="button"
+                        onClick={() => {
+                          setEditingId(item.id)
+                          setKegiatanUtamaValue(item.kegiatanUtama)
+                          setIndikatorValue(item.indikator)
+                          setRealisasiValue(item.berjalan.realisasi)
+                          setBuktiPendukungValue(item.buktiPendukung)
+                        }}
+                      >
                         <Upload className="size-3.5 mr-1" />
                         Upload
                       </Button>
@@ -352,11 +530,17 @@ export function RbTable() {
         </Table>
       </div>
 
-      <Dialog open={dialogAction !== null} onOpenChange={(open) => !open && setDialogAction(null)}>
+      {/* Dialog Sinkronisasi / Kunci */}
+      <Dialog
+        open={dialogAction !== null}
+        onOpenChange={(open) => !open && setDialogAction(null)}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>
-              {dialogAction === "sinkronisasi" ? "Konfirmasi Sinkronisasi" : "Konfirmasi Penguncian"}
+              {dialogAction === "sinkronisasi"
+                ? "Konfirmasi Sinkronisasi"
+                : "Konfirmasi Penguncian"}
             </DialogTitle>
             <DialogDescription>
               {dialogAction === "sinkronisasi"
@@ -368,9 +552,7 @@ export function RbTable() {
             <Button variant="outline" onClick={() => setDialogAction(null)}>
               Tidak
             </Button>
-            <Button onClick={() => setDialogAction(null)}>
-              Ya
-            </Button>
+            <Button onClick={() => setDialogAction(null)}>Ya</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -382,26 +564,60 @@ export function RbTable() {
         indikator={indikatorValue}
         realisasiValue={realisasiValue}
         onRealisasiChange={setRealisasiValue}
-        onSave={() => {
+        initialBuktiPendukung={buktiPendukungValue}
+        onSave={(updated) => {
           if (editingId !== null) {
             setData((prev) =>
               prev.map((item) =>
                 item.id === editingId
-                  ? { ...item, baseline: { ...item.baseline, realisasi: realisasiValue } }
+                  ? {
+                      ...item,
+                      berjalan: {
+                        ...item.berjalan,
+                        realisasi:
+                          updated?.realisasi !== undefined
+                            ? String(updated.realisasi)
+                            : realisasiValue,
+                        capaian:
+                          updated?.capaian !== undefined
+                            ? String(updated.capaian)
+                            : item.berjalan.capaian,
+                      },
+                      buktiPendukung:
+                        updated?.bukti_pendukung ?? item.buktiPendukung,
+                      keteranganBuktiPendukung:
+                        updated?.keterangan_bukti_pendukung ??
+                        item.keteranganBuktiPendukung,
+                    }
                   : item
               )
             )
             setEditingId(null)
           }
         }}
+        idRbTematik={editingRow ? String(editingRow.idRb) : ""}
+        idIndikatorRbTematik={editingRow?.id ?? ""}
+        idTargetRbTematik={editingRow?.idTarget ?? ""}
+        kodeOpd={userInfo?.kodeOpd ?? ""}
+        nip={userInfo?.nip ?? ""}
       />
 
       <ModalFaktorPenunjang
         open={editingFaktorId !== null}
-        onOpenChange={(open) => { if (!open) setEditingFaktorId(null); }}
+        onOpenChange={(open) => {
+          if (!open) setEditingFaktorId(null)
+        }}
         title="Faktor Penunjang"
-        kegiatanUtama={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? "" : ""}
-        indikator={editingFaktorId !== null ? data.find((d) => d.id === editingFaktorId)?.indikator ?? "" : ""}
+        kegiatanUtama={
+          editingFaktorId !== null
+            ? data.find((d) => d.id === editingFaktorId)?.kegiatanUtama ?? ""
+            : ""
+        }
+        indikator={
+          editingFaktorId !== null
+            ? data.find((d) => d.id === editingFaktorId)?.indikator ?? ""
+            : ""
+        }
         fieldValue={faktorValue}
         onFieldChange={setFaktorValue}
         onSave={() => {
@@ -420,9 +636,20 @@ export function RbTable() {
 
       <ModalFaktorPenghambat
         open={editingPenghambatId !== null}
-        onOpenChange={(open) => { if (!open) setEditingPenghambatId(null); }}
-        kegiatanUtama={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ?? "" : ""}
-        indikator={editingPenghambatId !== null ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? "" : ""}
+        onOpenChange={(open) => {
+          if (!open) setEditingPenghambatId(null)
+        }}
+        kegiatanUtama={
+          editingPenghambatId !== null
+            ? data.find((d) => d.id === editingPenghambatId)?.kegiatanUtama ??
+              ""
+            : ""
+        }
+        indikator={
+          editingPenghambatId !== null
+            ? data.find((d) => d.id === editingPenghambatId)?.indikator ?? ""
+            : ""
+        }
         fieldValue={penghambatValue}
         onFieldChange={setPenghambatValue}
         onSave={() => {

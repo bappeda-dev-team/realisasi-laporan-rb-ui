@@ -7,10 +7,10 @@ const API_REALISASI = process.env.NEXT_PUBLIC_API_REALISASI || "https://api-mahu
 
 const nextConfig: NextConfig = {
   rewrites: async () => [
-    {
-      source: "/api/v1/realisasi/:path*", // panggilan fe
-      destination: `${API_REALISASI}/:path*`, // backend
-    },
+    // {
+    //   source: "/api/v1/realisasi/:path*", // panggilan fe
+    //   destination: `${API_REALISASI}/:path*`, // backend
+    // },
     {
       source: "/auth-api/:path*",
       destination: `${API_URL}/:path*`,
