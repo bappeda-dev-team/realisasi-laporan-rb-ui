@@ -1,14 +1,9 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LaporanRbTable } from "./laporan-rb-table"
 
 export const metadata = {
   title: "Laporan",
-};
+}
 
 export default function LaporanPage() {
   return (
@@ -16,18 +11,24 @@ export default function LaporanPage() {
       <div>
         <h1 className="text-xl font-semibold">Laporan</h1>
         <p className="text-sm text-muted-foreground">
-          Generate dan unduh laporan realisasi anggaran.
+          Laporan realisasi reformasi birokrasi per target indikator.
         </p>
       </div>
-      <Card className="min-h-64">
-        <CardHeader>
-          <CardTitle className="text-base">Belum ada data</CardTitle>
-          <CardDescription>
-            Halaman ini akan diisi dengan daftar laporan yang tersedia.
-          </CardDescription>
-        </CardHeader>
-        <CardContent />
-      </Card>
+
+      <Tabs defaultValue="general" className="gap-4">
+        <TabsList>
+          <TabsTrigger value="general">RB General</TabsTrigger>
+          <TabsTrigger value="tematik">RB Tematik</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general">
+          <LaporanRbTable jenisRb="GENERAL" />
+        </TabsContent>
+
+        <TabsContent value="tematik">
+          <LaporanRbTable jenisRb="TEMATIK" />
+        </TabsContent>
+      </Tabs>
     </div>
-  );
+  )
 }
