@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, Lock, Pencil, RefreshCw, Search, Upload } from "lucide-react"
+import { Lock, Pencil, RefreshCw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -350,10 +350,6 @@ export function RbTable() {
               <TableHead rowSpan={2}>Keterangan</TableHead>
               <TableHead rowSpan={2}>Faktor Penunjang</TableHead>
               <TableHead rowSpan={2}>Faktor Penghambat</TableHead>
-              <TableHead rowSpan={2}>Bukti Pendukung</TableHead>
-              <TableHead rowSpan={2} className="w-24">
-                Aksi
-              </TableHead>
             </TableRow>
             <TableRow>
               <TableHead>Target</TableHead>
@@ -368,7 +364,7 @@ export function RbTable() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={14}
+                  colSpan={12}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Memuat data...
@@ -377,7 +373,7 @@ export function RbTable() {
             ) : error ? (
               <TableRow>
                 <TableCell
-                  colSpan={14}
+                  colSpan={12}
                   className="h-24 text-center text-destructive"
                 >
                   {error}
@@ -386,7 +382,7 @@ export function RbTable() {
             ) : filteredData.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={14}
+                  colSpan={12}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Tidak ada data ditemukan.
@@ -485,44 +481,6 @@ export function RbTable() {
                     </div>
                   </TableCell>
 
-                  {/* Bukti Pendukung */}
-                  <TableCell className="text-left">
-                    {item.buktiPendukung ? (
-                      <a
-                        href={item.buktiPendukung}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-blue-600 underline hover:text-blue-800"
-                      >
-                        <FileText className="size-3" />
-                        Lihat Bukti
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        Belum ada
-                      </span>
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    <div className="flex items-center justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        onClick={() => {
-                          setEditingId(item.id)
-                          setKegiatanUtamaValue(item.kegiatanUtama)
-                          setIndikatorValue(item.indikator)
-                          setRealisasiValue(item.berjalan.realisasi)
-                          setBuktiPendukungValue(item.buktiPendukung)
-                        }}
-                      >
-                        <Upload className="size-3.5 mr-1" />
-                        Upload
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             )}
